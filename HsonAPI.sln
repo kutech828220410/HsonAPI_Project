@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34301.259
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HsonAPI", "HsonAPI\HsonAPI.csproj", "{BCFFCA99-688C-40BF-B939-12FEF60DEE4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HsonAPILib", "HsonAPILib\HsonAPILib.csproj", "{2DE5FAFD-5B74-4DEA-8CFE-C10A9F729344}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BCFFCA99-688C-40BF-B939-12FEF60DEE4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCFFCA99-688C-40BF-B939-12FEF60DEE4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCFFCA99-688C-40BF-B939-12FEF60DEE4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCFFCA99-688C-40BF-B939-12FEF60DEE4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DE5FAFD-5B74-4DEA-8CFE-C10A9F729344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DE5FAFD-5B74-4DEA-8CFE-C10A9F729344}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DE5FAFD-5B74-4DEA-8CFE-C10A9F729344}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DE5FAFD-5B74-4DEA-8CFE-C10A9F729344}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DF46F8AC-759C-46B4-A519-63FBFF2B9955}
+	EndGlobalSection
+EndGlobal

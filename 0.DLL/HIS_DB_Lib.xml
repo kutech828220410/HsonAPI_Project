@@ -1,0 +1,428 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HIS_DB_Lib</name>
+    </assembly>
+    <members>
+        <member name="P:HIS_DB_Lib.returnData.Code">
+            <summary>
+            回傳結果碼
+            </summary>
+        </member>
+        <member name="T:HIS_DB_Lib.inv_combinelistClass">
+            <summary>
+            合併總單
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_combinelistClass.GUID">
+            <summary>
+            唯一KEY
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_combinelistClass.合併單名稱">
+            <summary>
+            合併單名稱
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_combinelistClass.合併單號">
+            <summary>
+            合併單號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_combinelistClass.建表人">
+            <summary>
+            建表人
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_combinelistClass.建表時間">
+            <summary>
+            建表時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_combinelistClass.備註">
+            <summary>
+            備註
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_combinelistClass.Records_Ary">
+            <summary>
+            合併單明細
+            </summary>
+        </member>
+        <member name="T:HIS_DB_Lib.inv_sub_combinelistClass">
+            <summary>
+            合併單明細
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.GUID">
+            <summary>
+            唯一KEY
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.Master_GUID">
+            <summary>
+            唯一KEY
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.REF_GUID">
+            <summary>
+            REF_GUID
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.合併單號">
+            <summary>
+            合併單號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.單號">
+            <summary>
+            單號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.名稱">
+            <summary>
+            名稱
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.類型">
+            <summary>
+            類型
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.新增時間">
+            <summary>
+            新增時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_sub_combinelistClass.備註">
+            <summary>
+            備註
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_records_Class.GUID">
+            <summary>
+            唯一KEY
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_records_Class.單號">
+            <summary>
+            單號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_records_Class.名稱">
+            <summary>
+            名稱
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.inv_records_Class.類型">
+            <summary>
+            類型
+            </summary>
+        </member>
+        <member name="T:HIS_DB_Lib.udnoectc">
+            <summary>
+            化療配藥通知處方
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.GUID">
+            <summary>
+            唯一KEY
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.病房">
+            <summary>
+            病房
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.床號">
+            <summary>
+            床號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.病人姓名">
+            <summary>
+            病人姓名
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.病歷號">
+            <summary>
+            病歷號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.生日">
+            <summary>
+            生日
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.性別">
+            <summary>
+            性別
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.身高">
+            <summary>
+            身高
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.體重">
+            <summary>
+            體重
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.診斷">
+            <summary>
+            診斷
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.科別">
+            <summary>
+            科別
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.開立醫師">
+            <summary>
+            開立醫師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.過敏記錄">
+            <summary>
+            過敏記錄
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.RegimenName">
+            <summary>
+            RegimenName
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.天數順序">
+            <summary>
+            天數順序
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.診別">
+            <summary>
+            診別
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.就醫序號">
+            <summary>
+            就醫序號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.醫囑序號">
+            <summary>
+            醫囑序號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.labdatas">
+            <summary>
+            化學治療前檢核項目
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.醫囑確認藥師">
+            <summary>
+            醫囑確認藥師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.醫囑確認時間">
+            <summary>
+            醫囑確認藥師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.調劑藥師">
+            <summary>
+            調劑藥師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.調劑完成時間">
+            <summary>
+            調劑完成時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.核對藥師">
+            <summary>
+            核對藥師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.核對時間">
+            <summary>
+            核對時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.加入時間">
+            <summary>
+            加入時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.ordersAry">
+            <summary>
+            藥囑資料(請參閱 udnoectc_ordersClass)
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc.ctcvarsAry">
+            <summary>
+            變異紀錄(請參閱 udnoectc_ctcvarsClass)
+            </summary>
+        </member>
+        <member name="T:HIS_DB_Lib.udnoectc_orders">
+            <summary>
+            藥囑資料(配藥通知子項目)
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.GUID">
+            <summary>
+            唯一KEY
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.Master_GUID">
+            <summary>
+            上層目錄索引鍵
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.藥囑序號">
+            <summary>
+            藥囑序號
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.服藥順序">
+            <summary>
+            服藥順序
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.藥碼">
+            <summary>
+            上層目錄索引鍵
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.藥名">
+            <summary>
+            藥名
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.警示">
+            <summary>
+            警示
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.劑量">
+            <summary>
+            劑量
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.單位">
+            <summary>
+            單位
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.途徑">
+            <summary>
+            途徑
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.頻次">
+            <summary>
+            頻次
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.儲位1">
+            <summary>
+            儲位1
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.儲位2">
+            <summary>
+            儲位2
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.備註">
+            <summary>
+            備註
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.數量">
+            <summary>
+            數量
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.處方開始時間">
+            <summary>
+            處方開始時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.處方結束時間">
+            <summary>
+            處方結束時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.已備藥完成">
+            <summary>
+            已備藥完成
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.備藥藥師">
+            <summary>
+            備藥藥師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.備藥完成時間">
+            <summary>
+            備藥完成時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.調劑藥師">
+            <summary>
+            調劑藥師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.調劑完成時間">
+            <summary>
+            調劑完成時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.核對藥師">
+            <summary>
+            核對藥師
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_orders.核對時間">
+            <summary>
+            核對時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_ctcvars.GUID">
+            <summary>
+            唯一KEY
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_ctcvars.Master_GUID">
+            <summary>
+            上層目錄索引鍵
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_ctcvars.藥名">
+            <summary>
+            藥名
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_ctcvars.變異時間">
+            <summary>
+            變異時間
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_ctcvars.變異原因">
+            <summary>
+            變異原因
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_ctcvars.變異內容">
+            <summary>
+            變異內容
+            </summary>
+        </member>
+        <member name="P:HIS_DB_Lib.udnoectc_ctcvars.說明">
+            <summary>
+            說明
+            </summary>
+        </member>
+    </members>
+</doc>

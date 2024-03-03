@@ -1,0 +1,279 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HsonAPI</name>
+    </assembly>
+    <members>
+        <member name="M:HsonAPI.hospital_problem_report.POST_init(HsonAPILib.returnData)">
+            <summary>
+            初始化醫院問題回報資料庫
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                }
+              }
+            </code>
+            </remarks>
+            <param name="returnData">共用傳遞資料結構</param>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_add_hospital_name(HsonAPILib.returnData)">
+            <summary>
+            新增醫院名稱
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "ValueAry" : 
+                [
+                  "名稱",
+                  "棟名",
+                  "診別"
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_delete_hospital_name_by_guid(HsonAPILib.returnData)">
+            <summary>
+            以GUID刪除醫院名稱
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "ValueAry" : 
+                [ 
+                  "GUID"
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_get_hospital_name(HsonAPILib.returnData)">
+            <summary>
+            取得所有醫院名稱
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "Value" : ""
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_get_hospital_name_by_guid(HsonAPILib.returnData)">
+            <summary>
+            以GUID取得所有醫院名稱
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "ValueAry" : 
+                [ 
+                  "GUID"
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_add_hospital_report(HsonAPILib.returnData)">
+            <summary>
+            新增問題回報資料
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+                    
+                },
+                "ValueAry" : 
+                [
+                   "標題",
+                   "內容",
+                   "hospital_name_guid"
+                ]
+                
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_edit_hospital_report_content_by_guid(HsonAPILib.returnData)">
+            <summary>
+            修改問題回報資料內容
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+                    
+                },
+                "ValueAry" : 
+                [
+                  "GUID",
+                  "內容"
+                ]
+                
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_get_all_hospital_report(HsonAPILib.returnData)">
+            <summary>
+            取得問題回報資料(不含圖片)
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+                    
+                }
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_get_hospital_report_by_guid(HsonAPILib.returnData)">
+            <summary>
+            以GUID取得問題回報資料(包含圖片)
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "ValueAry" : 
+                [ 
+                  "GUID"
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_add_picture_by_hospital_report_guid(HsonAPILib.returnData)">
+            <summary>
+            新增圖片到回報資料
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+                    
+                },
+                "ValueAry" : 
+                [ 
+                  "hospital_report_guid",
+                  "base64"
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.delete_picture_by_guid(HsonAPILib.returnData)">
+            <summary>
+            以GUID刪除圖片
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+                    
+                },
+                "ValueAry" : 
+                [ 
+                  "GUID",
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_set_hospital_report_finished_by_guid(HsonAPILib.returnData)">
+            <summary>
+            以GUID設定問題回報資料完成
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "ValueAry" : 
+                [ 
+                  "GUID"
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_set_hospital_report_reviewed_by_guid(HsonAPILib.returnData)">
+            <summary>
+            以GUID設定問題回報資料審核完畢
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "ValueAry" : 
+                [ 
+                  "GUID"
+                ]
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
