@@ -16,7 +16,11 @@ using System.Threading.Tasks;
 using System.Configuration;
 using Microsoft.AspNetCore.SignalR;
 using H_Pannel_lib;
-
+using HsonAPILib;
+using Swashbuckle.AspNetCore.Annotations;
+using Swashbuckle.AspNetCore.ReDoc;
+using Swashbuckle.AspNetCore.Newtonsoft;
+using Swashbuckle.AspNetCore;
 namespace HsonAPI
 {
     public class Startup
@@ -45,30 +49,29 @@ namespace HsonAPI
                 });
 
             });
+
             services.AddControllers();
-            services.AddSignalR();
-
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                // API 服務簡介
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Version = "v1",
-                    Title = "Hson.Co.Ltd Sysytem API",
-                    Description = "Hson.Co.Ltd Sysytem API",
-
+                options.SwaggerDoc("v1",
+                new OpenApiInfo
+                 {
+                     Title = "Hson.Co.Ltd. Sysytem API",
+                     Version = "v1",
+                     Description = "Hson.Co.Ltd. Sysytem API",
+               
                 });
 
-                // 讀取 XML 檔案產生 API 說明
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                var xmlPath_HsonAPI = Path.Combine(AppContext.BaseDirectory, $"HsonAPI.xml");
+                var xmlPath_HsonAPILib = Path.Combine(AppContext.BaseDirectory, $"HsonAPILib.xml");
 
-                var xmlFile_HIS_DB_Lib = $"HsonAPI.xml";
-                var xmlPath_HIS_DB_Lib = Path.Combine(AppContext.BaseDirectory, xmlFile_HIS_DB_Lib);
+                options.IncludeXmlComments(xmlPath_HsonAPILib , true);
 
-                c.IncludeXmlComments(xmlPath);
-                c.IncludeXmlComments(xmlPath_HIS_DB_Lib);
+                options.IncludeXmlComments(xmlPath_HsonAPI, true);
+                options.OrderActionsBy(s => s.RelativePath);
             });
+
+         
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,7 +80,9 @@ namespace HsonAPI
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+             
             }
+
             app.UseCors(builder =>
             {
                 builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowed(_ => true).AllowCredentials();
@@ -93,22 +98,16 @@ namespace HsonAPI
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-
-                endpoints.MapHub<ChatHub>("/chatHub");
             });
+
             app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                //c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            });
-        }
-        public class ChatHub : Hub
-        {
-            public async Task SendMessage(string user, string message)
-            {
-                await Clients.All.SendAsync("ReceiveMessage", user, message);
-            }
+            app.UseSwaggerUI();
 
+            app.UseReDoc(options =>
+            {
+                options.DocumentTitle = "Swagger Demo Documentation";
+                options.SpecUrl = "/swagger/v1/swagger.json";
+            });
         }
     }
 }

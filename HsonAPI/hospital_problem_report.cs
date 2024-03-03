@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +15,14 @@ using HsonAPILib;
 using MySql.Data;
 namespace HsonAPI
 {
+    /// <summary>
+    /// 問題回報單元
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class hospital_problem_report : ControllerBase
     {
+      
         static private string Server = ConfigurationManager.AppSettings["server"];
         static private uint Port = (uint)ConfigurationManager.AppSettings["port"].StringToInt32();
         static private string UserName = ConfigurationManager.AppSettings["user"];
@@ -40,9 +45,12 @@ namespace HsonAPI
         /// </code>
         /// </remarks>
         /// <param name="returnData">共用傳遞資料結構</param>
-        /// <returns></returns>
-        [Route("init")]
+        /// <returns></returns> 
+        [Route("init")]    
         [HttpPost]
+        [SwaggerResponse(1, "", typeof(hospital_nameClass))]
+        [SwaggerResponse(2, "", typeof(hostpital_reportClass))]
+        [SwaggerResponse(3, "", typeof(hostpital_report_picture_Class))]
         public string POST_init(returnData returnData)
         {
             try
@@ -470,6 +478,83 @@ namespace HsonAPI
                 returnData.Code = 200;
                 Logger.LogAddLine($"hospital_problem_report");
                 Logger.Log($"hospital_problem_report", $"{ returnData.JsonSerializationt(true)}");
+                Logger.LogAddLine($"hospital_problem_report");
+                return returnData.JsonSerializationt(true);
+            }
+            catch (Exception e)
+            {
+
+                returnData.Code = -200;
+                returnData.Data = null;
+                returnData.Result = $"{e.Message}";
+                Logger.Log($"hospital_problem_report", $"[異常] { returnData.Result}");
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// <summary>
+        /// 以GUID刪除問題回報資料
+        /// </summary>
+        /// <remarks>
+        /// 以下為範例JSON範例
+        /// <code>
+        ///   {
+        ///     "Data": 
+        ///     {
+        ///  
+        ///     },
+        ///     "ValueAry" : 
+        ///     [ 
+        ///       "GUID"
+        ///     ]
+        ///   }
+        /// </code>
+        /// </remarks>
+        /// <returns></returns>
+        [Route("delete_hospital_report_by_guid")]
+        [HttpPost]
+        public string POST_delete_hospital_report_by_guid(returnData returnData)
+        {
+            MyTimerBasic myTimerBasic = new MyTimerBasic();
+            myTimerBasic.StartTickTime(50000);
+            returnData.Method = "delete_hospital_report_by_guid";
+            try
+            {
+                POST_init(returnData);
+                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                if (returnData.ValueAry == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 無傳入資料";
+                    return returnData.JsonSerializationt(true);
+                }
+                if (returnData.ValueAry.Count != 1)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 內容應為[GUID]";
+                    return returnData.JsonSerializationt(true);
+                }
+                string GUID = returnData.ValueAry[0];
+                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.GUID, GUID);
+                if (list_hostpital_report.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.Value 傳入[GUID]查無資料";
+                    return returnData.JsonSerializationt(true);
+                }
+                List<object[]> list_hostpital_report_picture = sQLControl_hostpital_report_picture.GetRowsByDefult(null, (int)enum_hostpital_report_picture.hostpital_report_guid, GUID);
+
+              
+                sQLControl_hostpital_report.DeleteExtra(null, list_hostpital_report);
+                sQLControl_hostpital_report_picture.DeleteByDefult(null, (int)enum_hostpital_report_picture.hostpital_report_guid, GUID);
+                returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功刪除資料";
+                returnData.TimeTaken = myTimerBasic.ToString();
+                returnData.Code = 200;
+                string json_out = returnData.JsonSerializationt(true);
+                returnData.Data = "";
+                Logger.LogAddLine($"hospital_problem_report");
+                Logger.Log($"hospital_problem_report", $"{ json_out}");
                 Logger.LogAddLine($"hospital_problem_report");
                 return returnData.JsonSerializationt(true);
             }
@@ -1146,6 +1231,10 @@ namespace HsonAPI
             tables.Add(table_hostpital_name);
 
             return tables.JsonSerializationt(true);
+        }
+        private void Test(hospital_nameClass hospital_NameClass)
+        {
+
         }
     }
 }

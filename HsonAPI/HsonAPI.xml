@@ -4,6 +4,11 @@
         <name>HsonAPI</name>
     </assembly>
     <members>
+        <member name="T:HsonAPI.hospital_problem_report">
+            <summary>
+            問題回報單元
+            </summary>
+        </member>
         <member name="M:HsonAPI.hospital_problem_report.POST_init(HsonAPILib.returnData)">
             <summary>
             初始化醫院問題回報資料庫
@@ -20,7 +25,7 @@
             </code>
             </remarks>
             <param name="returnData">共用傳遞資料結構</param>
-            <returns></returns>
+            <returns></returns> 
         </member>
         <member name="M:HsonAPI.hospital_problem_report.POST_add_hospital_name(HsonAPILib.returnData)">
             <summary>
@@ -124,6 +129,27 @@
                    "hospital_name_guid"
                 ]
                 
+              }
+            </code>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:HsonAPI.hospital_problem_report.POST_delete_hospital_report_by_guid(HsonAPILib.returnData)">
+            <summary>
+            以GUID刪除問題回報資料
+            </summary>
+            <remarks>
+            以下為範例JSON範例
+            <code>
+              {
+                "Data": 
+                {
+             
+                },
+                "ValueAry" : 
+                [ 
+                  "GUID"
+                ]
               }
             </code>
             </remarks>
@@ -274,6 +300,11 @@
             </code>
             </remarks>
             <returns></returns>
+        </member>
+        <member name="T:HsonAPI.test">
+            <summary>
+            測試單元
+            </summary>
         </member>
     </members>
 </doc>

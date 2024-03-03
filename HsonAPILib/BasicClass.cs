@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using Basic;
 namespace HsonAPILib
 {
+    /// <summary>
+    /// 回傳結果碼
+    /// </summary>
     public class returnData
     {
         private object _data = new object();

@@ -19,6 +19,9 @@ namespace HsonAPILib
         是否完成,
         是否審核,
     }
+    /// <summary>
+    /// 醫院問題回報
+    /// </summary>
     public class hostpital_reportClass
     {
 

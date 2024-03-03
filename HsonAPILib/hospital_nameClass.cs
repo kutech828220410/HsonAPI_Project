@@ -7,6 +7,9 @@ using System.Text.Json.Serialization;
 using Basic;
 namespace HsonAPILib
 {
+    /// <summary>
+    /// 醫院名稱枚舉
+    /// </summary>
     public enum enum_hospital_nameClass
     {
         GUID,
@@ -14,10 +17,14 @@ namespace HsonAPILib
         棟名,
         診別,
     }
+    /// <summary>
+    /// 醫院名稱類別
+    /// </summary>
     public class hospital_nameClass
-    { /// <summary>
-      /// 唯一KEY
-      /// </summary>
+    {
+        /// <summary>
+        /// 唯一KEY
+        /// </summary>
         [JsonPropertyName("GUID")]
         public string GUID { get; set; }
         /// <summary>
