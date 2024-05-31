@@ -27,7 +27,7 @@ namespace HsonAPI
         {
             try
             {
-                string batchFilePath = @"C:\batch\sendemail_batch\sendemail_batch.exe";
+                string batchFilePath = @".\\sendemail_batch\sendemail_batch.exe";
                 string arguments = $"{name} 123";
 
                 ProcessStartInfo processStartInfo = new ProcessStartInfo(batchFilePath, arguments)
@@ -35,7 +35,8 @@ namespace HsonAPI
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = false
+                    CreateNoWindow = false,
+                    WindowStyle = ProcessWindowStyle.Normal
                 };
 
                 // 启动进程
@@ -59,7 +60,7 @@ namespace HsonAPI
                     }
                     else
                     {
-                        return "Error sending emails";
+                        return $"Error sending emails \n{output}";
                     }
                 }
             }

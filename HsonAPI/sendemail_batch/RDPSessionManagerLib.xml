@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RDPSessionManagerLib</name>
+    </assembly>
+    <members>
+        <member name="M:RDPSessionManager.UserAccountManager.SetUserPassword(System.String,System.String)">
+            <summary>
+            設置使用者密碼。
+            </summary>
+            <param name="userName">使用者名稱。</param>
+            <param name="newPassword">新密碼。</param>
+        </member>
+        <member name="M:RDPSessionManager.UserAccountManager.SetPasswordExpiration(System.String,System.Int32)">
+            <summary>
+            設置使用者密碼過期時間。
+            </summary>
+            <param name="userName">使用者名稱。</param>
+            <param name="minsUntilExpiration">密碼過期時間。</param>
+        </member>
+    </members>
+</doc>
