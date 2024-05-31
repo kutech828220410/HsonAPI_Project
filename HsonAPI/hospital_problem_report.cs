@@ -393,6 +393,8 @@ namespace HsonAPI
         ///        "標題",
         ///        "內容",
         ///        "hospital_name_guid"
+        ///        "回報人員"
+        ///        "發生時間"
         ///     ]
         ///     
         ///   }
@@ -418,16 +420,24 @@ namespace HsonAPI
                     returnData.Result = $"returnData.ValueAry 無傳入資料";
                     return returnData.JsonSerializationt(true);
                 }
-                if (returnData.ValueAry.Count != 3)
+                if (returnData.ValueAry.Count != 5)
                 {
                     returnData.Code = -200;
-                    returnData.Result = $"returnData.ValueAry 內容應為[標題],[內容],[hospital_name_guid]";
+                    returnData.Result = $"returnData.ValueAry 內容應為[標題],[內容],[hospital_name_guid],[回報人員],[發生時間]";
                     return returnData.JsonSerializationt(true);
                 }
              
                 string 標題 = returnData.ValueAry[0];
                 string 內容 = returnData.ValueAry[1];
                 string hospital_name_guid = returnData.ValueAry[2];
+                string 回報人員 = returnData.ValueAry[3];
+                string 發生時間 = returnData.ValueAry[4];
+                if (發生時間.Check_Date_String() == false)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"returnData.ValueAry 內容[發噌時間]資料格式錯誤";
+                    return returnData.JsonSerializationt(true);
+                }
                 if (標題.StringIsEmpty())
                 {
                     returnData.Code = -200;
@@ -467,8 +477,10 @@ namespace HsonAPI
                 hostpital_ReportClass.是否完成 = false.ToString();
                 hostpital_ReportClass.是否審核 = false.ToString();
                 hostpital_ReportClass.回報時間 = DateTime.Now.ToDateTimeString_6();
+                hostpital_ReportClass.發生時間 = 發生時間;
                 hostpital_ReportClass.完成時間 = DateTime.MinValue.ToDateTimeString();
                 hostpital_ReportClass.審核時間 = DateTime.MinValue.ToDateTimeString();
+                hostpital_ReportClass.回報人員 = 回報人員;
 
                 object[] value = hostpital_ReportClass.ClassToSQL<hostpital_reportClass,enum_hostpital_report>();
                 sQLControl_hostpital_report.AddRow(null, value);
@@ -983,6 +995,7 @@ namespace HsonAPI
         ///     "ValueAry" : 
         ///     [ 
         ///       "GUID"
+        ///       "完成人員"
         ///     ]
         ///   }
         /// </code>
@@ -1007,13 +1020,14 @@ namespace HsonAPI
                     returnData.Result = $"returnData.ValueAry 無傳入資料";
                     return returnData.JsonSerializationt(true);
                 }
-                if (returnData.ValueAry.Count != 1)
+                if (returnData.ValueAry.Count != 2)
                 {
                     returnData.Code = -200;
-                    returnData.Result = $"returnData.ValueAry 內容應為[GUID]";
+                    returnData.Result = $"returnData.ValueAry 內容應為[GUID],[完成人員]";
                     return returnData.JsonSerializationt(true);
                 }
                 string GUID = returnData.ValueAry[0];
+                string 完成人員 = returnData.ValueAry[1];
                 List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.GUID, GUID);
                 if (list_hostpital_report.Count == 0)
                 {
@@ -1044,6 +1058,7 @@ namespace HsonAPI
 
                 hostpital_ReportClass.是否完成 = true.ToString();
                 hostpital_ReportClass.完成時間 = DateTime.Now.ToDateTimeString_6();
+                hostpital_ReportClass.完成人員 = 完成人員;
 
                 object[] value = hostpital_ReportClass.ClassToSQL<hostpital_reportClass , enum_hostpital_report>();
                 sQLControl_hostpital_report.UpdateByDefulteExtra(null, value);
@@ -1190,10 +1205,13 @@ namespace HsonAPI
             table_hostpital_report.AddColumnList("標題", Table.StringType.VARCHAR, 500, Table.IndexType.None);
             table_hostpital_report.AddColumnList("內容", Table.StringType.VARCHAR, 2000, Table.IndexType.None);
             table_hostpital_report.AddColumnList("回報時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
+            table_hostpital_report.AddColumnList("發生時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
             table_hostpital_report.AddColumnList("完成時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
             table_hostpital_report.AddColumnList("審核時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
             table_hostpital_report.AddColumnList("是否完成", Table.StringType.VARCHAR, 10, Table.IndexType.None);
             table_hostpital_report.AddColumnList("是否審核", Table.StringType.VARCHAR, 10, Table.IndexType.None);
+            table_hostpital_report.AddColumnList("回報人員", Table.StringType.VARCHAR, 50, Table.IndexType.None);
+            table_hostpital_report.AddColumnList("完成人員", Table.StringType.VARCHAR, 50, Table.IndexType.None);
 
             if (!sQLControl_hostpital_report.IsTableCreat()) sQLControl_hostpital_report.CreatTable(table_hostpital_report);
             else sQLControl_hostpital_report.CheckAllColumnName(table_hostpital_report, true);

@@ -69,9 +69,24 @@
             內容
             </summary>
         </member>
+        <member name="P:HsonAPILib.hostpital_reportClass.回報人員">
+            <summary>
+            回報人員
+            </summary>
+        </member>
         <member name="P:HsonAPILib.hostpital_reportClass.回報時間">
             <summary>
             回報時間
+            </summary>
+        </member>
+        <member name="P:HsonAPILib.hostpital_reportClass.發生時間">
+            <summary>
+            發生時間
+            </summary>
+        </member>
+        <member name="P:HsonAPILib.hostpital_reportClass.完成人員">
+            <summary>
+            完成人員
             </summary>
         </member>
         <member name="P:HsonAPILib.hostpital_reportClass.完成時間">

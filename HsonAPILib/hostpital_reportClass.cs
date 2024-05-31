@@ -14,10 +14,13 @@ namespace HsonAPILib
         標題,
         內容,
         回報時間,
+        發生時間,
         完成時間,
         審核時間,
         是否完成,
         是否審核,
+        回報人員,
+        完成人員,
     }
     /// <summary>
     /// 醫院問題回報
@@ -58,10 +61,25 @@ namespace HsonAPILib
         [JsonPropertyName("content")]
         public string 內容 { get; set; }
         /// <summary>
+        /// 回報人員
+        /// </summary>
+        [JsonPropertyName("report_personnel")]
+        public string 回報人員 { get; set; }
+        /// <summary>
         /// 回報時間
         /// </summary>
         [JsonPropertyName("report_time")]
         public string 回報時間 { get; set; }
+        /// <summary>
+        /// 發生時間
+        /// </summary>
+        [JsonPropertyName("occurrence_time")]
+        public string 發生時間 { get; set; }
+        /// <summary>
+        /// 完成人員
+        /// </summary>
+        [JsonPropertyName("finished_personnel")]
+        public string 完成人員 { get; set; }
         /// <summary>
         /// 完成時間
         /// </summary>
