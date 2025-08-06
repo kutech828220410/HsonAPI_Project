@@ -39,77 +39,77 @@
             住院、門診、急診註記
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.GUID">
+        <member name="P:HsonAPILib.hospital_reportClass.GUID">
             <summary>
             唯一KEY
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.hospital_name_guid">
+        <member name="P:HsonAPILib.hospital_reportClass.hospital_name_guid">
             <summary>
             醫院名稱GUID索引鍵
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.標題">
+        <member name="P:HsonAPILib.hospital_reportClass.標題">
             <summary>
             標題
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.內容">
+        <member name="P:HsonAPILib.hospital_reportClass.內容">
             <summary>
             內容
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.回報時間">
+        <member name="P:HsonAPILib.hospital_reportClass.回報時間">
             <summary>
             回報時間
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.完成時間">
+        <member name="P:HsonAPILib.hospital_reportClass.完成時間">
             <summary>
             完成時間
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.審核時間">
+        <member name="P:HsonAPILib.hospital_reportClass.審核時間">
             <summary>
             審核時間
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.是否完成">
+        <member name="P:HsonAPILib.hospital_reportClass.是否完成">
             <summary>
             是否完成
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.是否審核">
+        <member name="P:HsonAPILib.hospital_reportClass.是否審核">
             <summary>
             是否審核
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.hospital_NameClass">
+        <member name="P:HsonAPILib.hospital_reportClass.hospital_NameClass">
             <summary>
             醫院資訊
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_reportClass.pictures">
+        <member name="P:HsonAPILib.hospital_reportClass.pictures">
             <summary>
             圖片Ary
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_report_picture_Class.GUID">
+        <member name="P:HsonAPILib.hospital_report_picture_Class.GUID">
             <summary>
             唯一KEY
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_report_picture_Class.hostpital_report_guid">
+        <member name="P:HsonAPILib.hospital_report_picture_Class.hospital_report_guid">
             <summary>
             問題回報資料GUID索引鍵
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_report_picture_Class.圖片">
+        <member name="P:HsonAPILib.hospital_report_picture_Class.圖片">
             <summary>
             圖片
             </summary>
         </member>
-        <member name="P:HsonAPILib.hostpital_report_picture_Class.加入時間">
+        <member name="P:HsonAPILib.hospital_report_picture_Class.加入時間">
             <summary>
             加入時間
             </summary>

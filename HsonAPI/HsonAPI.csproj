@@ -9,6 +9,10 @@
     <DocumentationFile>C:\Users\Administrator\source\repos\HsonAPI\HsonAPI\HsonAPI.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="Microsoft.OpenApi" Version="1.6.13" />
@@ -25,9 +29,6 @@
   <ItemGroup>
     <Reference Include="Basic">
       <HintPath>..\0.DLL\Basic.dll</HintPath>
-    </Reference>
-    <Reference Include="HIS_DB_Lib">
-      <HintPath>..\0.DLL\HIS_DB_Lib.dll</HintPath>
     </Reference>
     <Reference Include="HsonAPILib">
       <HintPath>..\0.DLL\HsonAPILib.dll</HintPath>

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using Basic;
+using System.ComponentModel;
 namespace HsonAPILib
 {
     /// <summary>
@@ -12,10 +13,14 @@ namespace HsonAPILib
     /// </summary>
     public enum enum_hospital_nameClass
     {
+        [Description("GUID,VARCHAR,50,PRIMARY")]
         GUID,
+        [Description("名稱,VARCHAR,50,NONE")]
         名稱,
+        [Description("棟名,VARCHAR,50,NONE")]
         棟名,
-        診別,
+        [Description("單位,VARCHAR,50,NONE")]
+        單位,
     }
     /// <summary>
     /// 醫院名稱類別
@@ -41,6 +46,6 @@ namespace HsonAPILib
         /// 住院、門診、急診註記
         /// </summary>
         [JsonPropertyName("hcasetyp")]
-        public string 診別 { get; set; }
+        public string 單位 { get; set; }
     }
 }

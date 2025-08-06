@@ -49,8 +49,8 @@ namespace HsonAPI
         [Route("init")]    
         [HttpPost]
         [SwaggerResponse(1, "", typeof(hospital_nameClass))]
-        [SwaggerResponse(2, "", typeof(hostpital_reportClass))]
-        [SwaggerResponse(3, "", typeof(hostpital_report_picture_Class))]
+        [SwaggerResponse(2, "", typeof(hospital_reportClass))]
+        [SwaggerResponse(3, "", typeof(hospital_report_picture_Class))]
         public string POST_init(returnData returnData)
         {
             try
@@ -97,8 +97,8 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
        
                 if (returnData.ValueAry == null)
                 {
@@ -133,34 +133,34 @@ namespace HsonAPI
                     returnData.Result = $"returnData.Value [診別]不得為空白";
                     return returnData.JsonSerializationt(true);
                 }
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.名稱, 名稱);
-                list_hostpital_name = list_hostpital_name.GetRows((int)enum_hospital_nameClass.棟名, 棟名);
-                list_hostpital_name = list_hostpital_name.GetRows((int)enum_hospital_nameClass.診別, 診別);
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.名稱, 名稱);
+                list_hospital_name = list_hospital_name.GetRows((int)enum_hospital_nameClass.棟名, 棟名);
+                list_hospital_name = list_hospital_name.GetRows((int)enum_hospital_nameClass.單位, 診別);
 
-                List<object[]> list_hostpital_name_add = new List<object[]>();
-                List<object[]> list_hostpital_name_replace = new List<object[]>();
+                List<object[]> list_hospital_name_add = new List<object[]>();
+                List<object[]> list_hospital_name_replace = new List<object[]>();
 
-                if (list_hostpital_name.Count == 0)
+                if (list_hospital_name.Count == 0)
                 {
                     object[] value = new object[new enum_hospital_nameClass().GetLength()];
                     value[(int)enum_hospital_nameClass.GUID] = Guid.NewGuid().ToString();
                     value[(int)enum_hospital_nameClass.名稱] = 名稱;
                     value[(int)enum_hospital_nameClass.棟名] = 棟名;
-                    value[(int)enum_hospital_nameClass.診別] = 診別;
-                    list_hostpital_name_add.Add(value);
+                    value[(int)enum_hospital_nameClass.單位] = 診別;
+                    list_hospital_name_add.Add(value);
                 }
                 else
                 {
-                    object[] value = list_hostpital_name[0];
+                    object[] value = list_hospital_name[0];
                     value[(int)enum_hospital_nameClass.名稱] = 名稱;
                     value[(int)enum_hospital_nameClass.棟名] = 棟名;
-                    value[(int)enum_hospital_nameClass.診別] = 診別;
-                    list_hostpital_name_replace.Add(value);
+                    value[(int)enum_hospital_nameClass.單位] = 診別;
+                    list_hospital_name_replace.Add(value);
                 }
 
-                sQLControl_hostpital_name.AddRows(null, list_hostpital_name_add);
-                sQLControl_hostpital_name.UpdateByDefulteExtra(null, list_hostpital_name_replace);
-                returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功,共新增<{list_hostpital_name_add.Count}>筆資料,共修改<{list_hostpital_name_replace.Count}>筆資料";
+                sQLControl_hospital_name.AddRows(null, list_hospital_name_add);
+                sQLControl_hospital_name.UpdateByDefulteExtra(null, list_hospital_name_replace);
+                returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功,共新增<{list_hospital_name_add.Count}>筆資料,共修改<{list_hospital_name_replace.Count}>筆資料";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
 
@@ -208,8 +208,8 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -225,10 +225,10 @@ namespace HsonAPI
                 string GUID = returnData.ValueAry[0];
 
 
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.GUID, GUID);
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.GUID, GUID);
       
-                sQLControl_hostpital_name.DeleteExtra(null, list_hostpital_name);
-                returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功,共刪除<{list_hostpital_name.Count}>筆資料";
+                sQLControl_hospital_name.DeleteExtra(null, list_hospital_name);
+                returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功,共刪除<{list_hospital_name.Count}>筆資料";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
 
@@ -273,13 +273,13 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
      
         
 
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetAllRows(null);
-                List<hospital_nameClass> hospital_NameClasses = list_hostpital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetAllRows(null);
+                List<hospital_nameClass> hospital_NameClasses = list_hospital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
 
                 returnData.Data = hospital_NameClasses;
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 取得成功,共<{hospital_NameClasses.Count}>筆資料";
@@ -330,8 +330,8 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -345,15 +345,15 @@ namespace HsonAPI
                     return returnData.JsonSerializationt(true);
                 }
                 string GUID = returnData.ValueAry[0];
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.GUID, GUID);
-                if(list_hostpital_name.Count == 0)
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.GUID, GUID);
+                if(list_hospital_name.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Data = null;
                     returnData.Result = $"找無任何資料";
                     return returnData.JsonSerializationt(true);
                 }
-                hospital_nameClass hospital_NameClass = list_hostpital_name[0].SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
+                hospital_nameClass hospital_NameClass = list_hospital_name[0].SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
 
                 returnData.Data = hospital_NameClass;
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 取得成功";
@@ -411,9 +411,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -450,43 +450,43 @@ namespace HsonAPI
                     returnData.Result = $"returnData.Value [hospital_name_guid]不得為空白";
                     return returnData.JsonSerializationt(true);
                 }
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.GUID, hospital_name_guid);
-                if (list_hostpital_name.Count == 0)
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetRowsByDefult(null, (int)enum_hospital_nameClass.GUID, hospital_name_guid);
+                if (list_hospital_name.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"找無[醫院名稱]資料請檢查[hospital_name_guid]";
                     return returnData.JsonSerializationt(true);
                 }
 
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.hospital_name_guid, hospital_name_guid);
-                list_hostpital_report = list_hostpital_report.GetRows((int)enum_hostpital_report.標題, 標題);
-                if (list_hostpital_report.Count > 0)
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetRowsByDefult(null, (int)enum_hospital_report.hospital_name_guid, hospital_name_guid);
+                list_hospital_report = list_hospital_report.GetRows((int)enum_hospital_report.標題, 標題);
+                if (list_hospital_report.Count > 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"已有相同標題,請更換標題";
                     return returnData.JsonSerializationt(true);
                 }
           
-                hospital_nameClass hospital_NameClass = list_hostpital_name[0].SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
+                hospital_nameClass hospital_NameClass = list_hospital_name[0].SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
 
-                hostpital_reportClass hostpital_ReportClass = new hostpital_reportClass();
-                hostpital_ReportClass.GUID = Guid.NewGuid().ToString();
-                hostpital_ReportClass.標題 = 標題;
-                hostpital_ReportClass.內容 = 內容;
-                hostpital_ReportClass.hospital_NameClass = hospital_NameClass;
-                hostpital_ReportClass.是否完成 = false.ToString();
-                hostpital_ReportClass.是否審核 = false.ToString();
-                hostpital_ReportClass.回報時間 = DateTime.Now.ToDateTimeString_6();
-                hostpital_ReportClass.發生時間 = 發生時間;
-                hostpital_ReportClass.完成時間 = DateTime.MinValue.ToDateTimeString();
-                hostpital_ReportClass.審核時間 = DateTime.MinValue.ToDateTimeString();
-                hostpital_ReportClass.回報人員 = 回報人員;
+                hospital_reportClass hospital_ReportClass = new hospital_reportClass();
+                hospital_ReportClass.GUID = Guid.NewGuid().ToString();
+                hospital_ReportClass.標題 = 標題;
+                hospital_ReportClass.內容 = 內容;
+                hospital_ReportClass.hospital_NameClass = hospital_NameClass;
+                hospital_ReportClass.是否完成 = false.ToString();
+                hospital_ReportClass.是否審核 = false.ToString();
+                hospital_ReportClass.回報時間 = DateTime.Now.ToDateTimeString_6();
+                hospital_ReportClass.發生時間 = 發生時間;
+                hospital_ReportClass.完成時間 = DateTime.MinValue.ToDateTimeString();
+                hospital_ReportClass.審核時間 = DateTime.MinValue.ToDateTimeString();
+                hospital_ReportClass.回報人員 = 回報人員;
 
-                object[] value = hostpital_ReportClass.ClassToSQL<hostpital_reportClass,enum_hostpital_report>();
-                sQLControl_hostpital_report.AddRow(null, value);
+                object[] value = hospital_ReportClass.ClassToSQL<hospital_reportClass,enum_hospital_report>();
+                sQLControl_hospital_report.AddRow(null, value);
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功新增<1>筆資料";
                 returnData.TimeTaken = myTimerBasic.ToString();
-                returnData.Data = hostpital_ReportClass;
+                returnData.Data = hospital_ReportClass;
                 returnData.Code = 200;
                 Logger.LogAddLine($"hospital_problem_report");
                 Logger.Log($"hospital_problem_report", $"{ returnData.JsonSerializationt(true)}");
@@ -532,9 +532,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -548,18 +548,18 @@ namespace HsonAPI
                     return returnData.JsonSerializationt(true);
                 }
                 string GUID = returnData.ValueAry[0];
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.GUID, GUID);
-                if (list_hostpital_report.Count == 0)
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetRowsByDefult(null, (int)enum_hospital_report.GUID, GUID);
+                if (list_hospital_report.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"returnData.Value 傳入[GUID]查無資料";
                     return returnData.JsonSerializationt(true);
                 }
-                List<object[]> list_hostpital_report_picture = sQLControl_hostpital_report_picture.GetRowsByDefult(null, (int)enum_hostpital_report_picture.hostpital_report_guid, GUID);
+                List<object[]> list_hospital_report_picture = sQLControl_hospital_report_picture.GetRowsByDefult(null, (int)enum_hospital_report_picture.hospital_report_guid, GUID);
 
               
-                sQLControl_hostpital_report.DeleteExtra(null, list_hostpital_report);
-                sQLControl_hostpital_report_picture.DeleteByDefult(null, (int)enum_hostpital_report_picture.hostpital_report_guid, GUID);
+                sQLControl_hospital_report.DeleteExtra(null, list_hospital_report);
+                sQLControl_hospital_report_picture.DeleteByDefult(null, (int)enum_hospital_report_picture.hospital_report_guid, GUID);
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功刪除資料";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
@@ -611,9 +611,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -629,17 +629,17 @@ namespace HsonAPI
                 string GUID = returnData.ValueAry[0];
                 string 內容 = returnData.ValueAry[1];
 
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.GUID, GUID);
-                if (list_hostpital_report.Count == 0)
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetRowsByDefult(null, (int)enum_hospital_report.GUID, GUID);
+                if (list_hospital_report.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"[GUID] 查無資料,請輸入正確的回報問題GUID";
                     return returnData.JsonSerializationt(true);
                 }
-                list_hostpital_report[0][(int)enum_hostpital_report.內容] = 內容;
+                list_hospital_report[0][(int)enum_hospital_report.內容] = 內容;
 
            
-                sQLControl_hostpital_report.UpdateByDefulteExtra(null, list_hostpital_report);
+                sQLControl_hospital_report.UpdateByDefulteExtra(null, list_hospital_report);
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功修改資料";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
@@ -683,46 +683,46 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
 
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetAllRows(null);
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetAllRows(null);
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetAllRows(null);
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetAllRows(null);
 
-                List<hostpital_reportClass> hostpital_ReportClasses = list_hostpital_report.SQLToClass<hostpital_reportClass, enum_hostpital_report>();
-                List<hospital_nameClass> hospital_NameClasses = list_hostpital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
+                List<hospital_reportClass> hospital_ReportClasses = list_hospital_report.SQLToClass<hospital_reportClass, enum_hospital_report>();
+                List<hospital_nameClass> hospital_NameClasses = list_hospital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
                 List<hospital_nameClass> hospital_NameClasses_buf = new List<hospital_nameClass>();
-                string[] colnames = new string[] { enum_hostpital_report_picture.GUID.GetEnumName(), enum_hostpital_report_picture.hostpital_report_guid.GetEnumName(), enum_hostpital_report_picture.加入時間.GetEnumName() };
-                List<object[]> list_hostpital_report_picture = sQLControl_hostpital_report_picture.GetColumnValues(null, colnames, false);
-                List<hostpital_report_picture_Class> hostpital_Report_Picture_Classes = list_hostpital_report_picture.SQLToClass<hostpital_report_picture_Class, enum_hostpital_report_picture>();
-                List<hostpital_report_picture_Class> hostpital_Report_Picture_Classes_buf = new List<hostpital_report_picture_Class>();
+                string[] colnames = new string[] { enum_hospital_report_picture.GUID.GetEnumName(), enum_hospital_report_picture.hospital_report_guid.GetEnumName(), enum_hospital_report_picture.加入時間.GetEnumName() };
+                List<object[]> list_hospital_report_picture = sQLControl_hospital_report_picture.GetColumnValues(null, colnames, false);
+                List<hospital_report_picture_Class> hospital_Report_Picture_Classes = list_hospital_report_picture.SQLToClass<hospital_report_picture_Class, enum_hospital_report_picture>();
+                List<hospital_report_picture_Class> hospital_Report_Picture_Classes_buf = new List<hospital_report_picture_Class>();
 
-                for (int i = 0; i < hostpital_ReportClasses.Count; i++)
+                for (int i = 0; i < hospital_ReportClasses.Count; i++)
                 {
-                    string GUID = hostpital_ReportClasses[i].GUID;
-                    string hospital_name_guid = hostpital_ReportClasses[i].hospital_name_guid;
+                    string GUID = hospital_ReportClasses[i].GUID;
+                    string hospital_name_guid = hospital_ReportClasses[i].hospital_name_guid;
                     hospital_NameClasses_buf = (from temp in hospital_NameClasses
                                                 where temp.GUID == hospital_name_guid
                                                 select temp).ToList();
                     if(hospital_NameClasses_buf.Count > 0)
                     {
-                        hostpital_ReportClasses[i].hospital_NameClass = hospital_NameClasses_buf[0];
+                        hospital_ReportClasses[i].hospital_NameClass = hospital_NameClasses_buf[0];
                     }
 
-                    hostpital_Report_Picture_Classes_buf = (from temp in hostpital_Report_Picture_Classes
-                                                            where temp.hostpital_report_guid == GUID
+                    hospital_Report_Picture_Classes_buf = (from temp in hospital_Report_Picture_Classes
+                                                            where temp.hospital_report_guid == GUID
                                                             select temp).ToList();
-                    if (hostpital_Report_Picture_Classes_buf.Count > 0)
+                    if (hospital_Report_Picture_Classes_buf.Count > 0)
                     {
-                        hostpital_ReportClasses[i].pictures = hostpital_Report_Picture_Classes_buf;
+                        hospital_ReportClasses[i].pictures = hospital_Report_Picture_Classes_buf;
                     }
                 }
 
 
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功取得資料";
                 returnData.TimeTaken = myTimerBasic.ToString();
-                returnData.Data = hostpital_ReportClasses;
+                returnData.Data = hospital_ReportClasses;
                 returnData.Code = 200;
                 Logger.LogAddLine($"hospital_problem_report");
                 Logger.Log($"hospital_problem_report", $"{ returnData.JsonSerializationt(true)}");
@@ -768,9 +768,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -784,39 +784,39 @@ namespace HsonAPI
                     return returnData.JsonSerializationt(true);
                 }
                 string GUID = returnData.ValueAry[0];
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.GUID, GUID);
-                if(list_hostpital_report.Count == 0)
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetRowsByDefult(null, (int)enum_hospital_report.GUID, GUID);
+                if(list_hospital_report.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"returnData.Value 傳入[GUID]查無資料";
                     return returnData.JsonSerializationt(true);
                 }
-                List<object[]> list_hostpital_report_picture = sQLControl_hostpital_report_picture.GetRowsByDefult(null, (int)enum_hostpital_report_picture.hostpital_report_guid, GUID);
-                List<hostpital_report_picture_Class> hostpital_Report_Picture_Classes = list_hostpital_report_picture.SQLToClass<hostpital_report_picture_Class , enum_hostpital_report_picture>();
+                List<object[]> list_hospital_report_picture = sQLControl_hospital_report_picture.GetRowsByDefult(null, (int)enum_hospital_report_picture.hospital_report_guid, GUID);
+                List<hospital_report_picture_Class> hospital_Report_Picture_Classes = list_hospital_report_picture.SQLToClass<hospital_report_picture_Class , enum_hospital_report_picture>();
 
-                hostpital_reportClass hostpital_ReportClass = list_hostpital_report[0].SQLToClass<hostpital_reportClass, enum_hostpital_report>();
+                hospital_reportClass hospital_ReportClass = list_hospital_report[0].SQLToClass<hospital_reportClass, enum_hospital_report>();
 
 
 
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetAllRows(null);
-                List<hospital_nameClass> hospital_NameClasses = list_hostpital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetAllRows(null);
+                List<hospital_nameClass> hospital_NameClasses = list_hospital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
                 List<hospital_nameClass> hospital_NameClasses_buf = new List<hospital_nameClass>();
 
-                string hospital_name_guid = hostpital_ReportClass.hospital_name_guid;
+                string hospital_name_guid = hospital_ReportClass.hospital_name_guid;
                 hospital_NameClasses_buf = (from temp in hospital_NameClasses
                                             where temp.GUID == hospital_name_guid
                                             select temp).ToList();
                 if (hospital_NameClasses_buf.Count > 0)
                 {
-                    hostpital_ReportClass.hospital_NameClass = hospital_NameClasses_buf[0];
+                    hospital_ReportClass.hospital_NameClass = hospital_NameClasses_buf[0];
                 }
-                hostpital_ReportClass.pictures = hostpital_Report_Picture_Classes;
+                hospital_ReportClass.pictures = hospital_Report_Picture_Classes;
 
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功取得資料";
                 returnData.TimeTaken = myTimerBasic.ToString();             
                 returnData.Code = 200;
                 string json_out = returnData.JsonSerializationt(true);
-                returnData.Data = hostpital_ReportClass;
+                returnData.Data = hospital_ReportClass;
                 Logger.LogAddLine($"hospital_problem_report");
                 Logger.Log($"hospital_problem_report", $"{ json_out}");
                 Logger.LogAddLine($"hospital_problem_report");
@@ -862,9 +862,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
 
                 if (returnData.ValueAry.Count != 2)
                 {
@@ -874,21 +874,21 @@ namespace HsonAPI
                 }
                 string hospital_report_guid = returnData.ValueAry[0];
                 string base64 = returnData.ValueAry[1];
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null,(int)enum_hostpital_report.GUID, hospital_report_guid);
-                if(list_hostpital_report.Count == 0)
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetRowsByDefult(null,(int)enum_hospital_report.GUID, hospital_report_guid);
+                if(list_hospital_report.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"[hospital_report_guid] 查無資料,請輸入正確的回報問題GUID";
                     return returnData.JsonSerializationt(true);
                 }
-                hostpital_report_picture_Class hostpital_Report_Picture_Class = new hostpital_report_picture_Class();
-                hostpital_Report_Picture_Class.GUID = Guid.NewGuid().ToString();
-                hostpital_Report_Picture_Class.hostpital_report_guid = hospital_report_guid;
-                hostpital_Report_Picture_Class.圖片 = base64;
-                hostpital_Report_Picture_Class.加入時間 = DateTime.Now.ToDateTimeString_6();
-                object[] value = hostpital_Report_Picture_Class.ClassToSQL<hostpital_report_picture_Class , enum_hostpital_report_picture>();
+                hospital_report_picture_Class hospital_Report_Picture_Class = new hospital_report_picture_Class();
+                hospital_Report_Picture_Class.GUID = Guid.NewGuid().ToString();
+                hospital_Report_Picture_Class.hospital_report_guid = hospital_report_guid;
+                hospital_Report_Picture_Class.圖片 = base64;
+                hospital_Report_Picture_Class.加入時間 = DateTime.Now.ToDateTimeString_6();
+                object[] value = hospital_Report_Picture_Class.ClassToSQL<hospital_report_picture_Class , enum_hospital_report_picture>();
 
-                sQLControl_hostpital_report_picture.AddRow(null, value);
+                sQLControl_hospital_report_picture.AddRow(null, value);
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 新增成功";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
@@ -936,9 +936,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
 
                 if (returnData.ValueAry == null)
                 {
@@ -953,8 +953,8 @@ namespace HsonAPI
                     return returnData.JsonSerializationt(true);
                 }
                 string GUID = returnData.ValueAry[0];
-                List<object[]> list_hostpital_report_picture = sQLControl_hostpital_report_picture.GetRowsByDefult(null, (int)enum_hostpital_report_picture.GUID, GUID);
-                if (list_hostpital_report_picture.Count == 0)
+                List<object[]> list_hospital_report_picture = sQLControl_hospital_report_picture.GetRowsByDefult(null, (int)enum_hospital_report_picture.GUID, GUID);
+                if (list_hospital_report_picture.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"[hospital_report_guid] 查無資料,請輸入正確的回報問題GUID";
@@ -962,7 +962,7 @@ namespace HsonAPI
                 }
 
 
-                sQLControl_hostpital_report_picture.DeleteExtra(null, list_hostpital_report_picture);
+                sQLControl_hospital_report_picture.DeleteExtra(null, list_hospital_report_picture);
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 刪除成功";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
@@ -1011,9 +1011,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -1028,46 +1028,46 @@ namespace HsonAPI
                 }
                 string GUID = returnData.ValueAry[0];
                 string 完成人員 = returnData.ValueAry[1];
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.GUID, GUID);
-                if (list_hostpital_report.Count == 0)
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetRowsByDefult(null, (int)enum_hospital_report.GUID, GUID);
+                if (list_hospital_report.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"returnData.Value 傳入[GUID]查無資料";
                     return returnData.JsonSerializationt(true);
                 }
-                List<object[]> list_hostpital_report_picture = sQLControl_hostpital_report_picture.GetRowsByDefult(null, (int)enum_hostpital_report_picture.hostpital_report_guid, GUID);
-                List<hostpital_report_picture_Class> hostpital_Report_Picture_Classes = list_hostpital_report_picture.SQLToClass<hostpital_report_picture_Class, enum_hostpital_report_picture>();
+                List<object[]> list_hospital_report_picture = sQLControl_hospital_report_picture.GetRowsByDefult(null, (int)enum_hospital_report_picture.hospital_report_guid, GUID);
+                List<hospital_report_picture_Class> hospital_Report_Picture_Classes = list_hospital_report_picture.SQLToClass<hospital_report_picture_Class, enum_hospital_report_picture>();
 
-                hostpital_reportClass hostpital_ReportClass = list_hostpital_report[0].SQLToClass<hostpital_reportClass, enum_hostpital_report>();
+                hospital_reportClass hospital_ReportClass = list_hospital_report[0].SQLToClass<hospital_reportClass, enum_hospital_report>();
 
 
 
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetAllRows(null);
-                List<hospital_nameClass> hospital_NameClasses = list_hostpital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetAllRows(null);
+                List<hospital_nameClass> hospital_NameClasses = list_hospital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
                 List<hospital_nameClass> hospital_NameClasses_buf = new List<hospital_nameClass>();
 
-                string hospital_name_guid = hostpital_ReportClass.hospital_name_guid;
+                string hospital_name_guid = hospital_ReportClass.hospital_name_guid;
                 hospital_NameClasses_buf = (from temp in hospital_NameClasses
                                             where temp.GUID == hospital_name_guid
                                             select temp).ToList();
                 if (hospital_NameClasses_buf.Count > 0)
                 {
-                    hostpital_ReportClass.hospital_NameClass = hospital_NameClasses_buf[0];
+                    hospital_ReportClass.hospital_NameClass = hospital_NameClasses_buf[0];
                 }
-                hostpital_ReportClass.pictures = hostpital_Report_Picture_Classes;
+                hospital_ReportClass.pictures = hospital_Report_Picture_Classes;
 
-                hostpital_ReportClass.是否完成 = true.ToString();
-                hostpital_ReportClass.完成時間 = DateTime.Now.ToDateTimeString_6();
-                hostpital_ReportClass.完成人員 = 完成人員;
+                hospital_ReportClass.是否完成 = true.ToString();
+                hospital_ReportClass.完成時間 = DateTime.Now.ToDateTimeString_6();
+                hospital_ReportClass.完成人員 = 完成人員;
 
-                object[] value = hostpital_ReportClass.ClassToSQL<hostpital_reportClass , enum_hostpital_report>();
-                sQLControl_hostpital_report.UpdateByDefulteExtra(null, value);
+                object[] value = hospital_ReportClass.ClassToSQL<hospital_reportClass , enum_hospital_report>();
+                sQLControl_hospital_report.UpdateByDefulteExtra(null, value);
 
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功設定資料完成";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
                 string json_out = returnData.JsonSerializationt(true);
-                returnData.Data = hostpital_ReportClass;
+                returnData.Data = hospital_ReportClass;
                 Logger.LogAddLine($"hospital_problem_report");
                 Logger.Log($"hospital_problem_report", $"{ json_out}");
                 Logger.LogAddLine($"hospital_problem_report");
@@ -1112,9 +1112,9 @@ namespace HsonAPI
             try
             {
                 POST_init(returnData);
-                SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-                SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+                SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
                 if (returnData.ValueAry == null)
                 {
                     returnData.Code = -200;
@@ -1128,45 +1128,45 @@ namespace HsonAPI
                     return returnData.JsonSerializationt(true);
                 }
                 string GUID = returnData.ValueAry[0];
-                List<object[]> list_hostpital_report = sQLControl_hostpital_report.GetRowsByDefult(null, (int)enum_hostpital_report.GUID, GUID);
-                if (list_hostpital_report.Count == 0)
+                List<object[]> list_hospital_report = sQLControl_hospital_report.GetRowsByDefult(null, (int)enum_hospital_report.GUID, GUID);
+                if (list_hospital_report.Count == 0)
                 {
                     returnData.Code = -200;
                     returnData.Result = $"returnData.Value 傳入[GUID]查無資料";
                     return returnData.JsonSerializationt(true);
                 }
-                List<object[]> list_hostpital_report_picture = sQLControl_hostpital_report_picture.GetRowsByDefult(null, (int)enum_hostpital_report_picture.hostpital_report_guid, GUID);
-                List<hostpital_report_picture_Class> hostpital_Report_Picture_Classes = list_hostpital_report_picture.SQLToClass<hostpital_report_picture_Class, enum_hostpital_report_picture>();
+                List<object[]> list_hospital_report_picture = sQLControl_hospital_report_picture.GetRowsByDefult(null, (int)enum_hospital_report_picture.hospital_report_guid, GUID);
+                List<hospital_report_picture_Class> hospital_Report_Picture_Classes = list_hospital_report_picture.SQLToClass<hospital_report_picture_Class, enum_hospital_report_picture>();
 
-                hostpital_reportClass hostpital_ReportClass = list_hostpital_report[0].SQLToClass<hostpital_reportClass, enum_hostpital_report>();
+                hospital_reportClass hospital_ReportClass = list_hospital_report[0].SQLToClass<hospital_reportClass, enum_hospital_report>();
 
 
 
-                List<object[]> list_hostpital_name = sQLControl_hostpital_name.GetAllRows(null);
-                List<hospital_nameClass> hospital_NameClasses = list_hostpital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
+                List<object[]> list_hospital_name = sQLControl_hospital_name.GetAllRows(null);
+                List<hospital_nameClass> hospital_NameClasses = list_hospital_name.SQLToClass<hospital_nameClass, enum_hospital_nameClass>();
                 List<hospital_nameClass> hospital_NameClasses_buf = new List<hospital_nameClass>();
 
-                string hospital_name_guid = hostpital_ReportClass.hospital_name_guid;
+                string hospital_name_guid = hospital_ReportClass.hospital_name_guid;
                 hospital_NameClasses_buf = (from temp in hospital_NameClasses
                                             where temp.GUID == hospital_name_guid
                                             select temp).ToList();
                 if (hospital_NameClasses_buf.Count > 0)
                 {
-                    hostpital_ReportClass.hospital_NameClass = hospital_NameClasses_buf[0];
+                    hospital_ReportClass.hospital_NameClass = hospital_NameClasses_buf[0];
                 }
-                hostpital_ReportClass.pictures = hostpital_Report_Picture_Classes;
+                hospital_ReportClass.pictures = hospital_Report_Picture_Classes;
 
-                hostpital_ReportClass.是否審核 = true.ToString();
-                hostpital_ReportClass.審核時間 = DateTime.Now.ToDateTimeString_6();
+                hospital_ReportClass.是否審核 = true.ToString();
+                hospital_ReportClass.審核時間 = DateTime.Now.ToDateTimeString_6();
 
-                object[] value = hostpital_ReportClass.ClassToSQL<hostpital_reportClass, enum_hostpital_report>();
-                sQLControl_hostpital_report.UpdateByDefulteExtra(null, value);
+                object[] value = hospital_ReportClass.ClassToSQL<hospital_reportClass, enum_hospital_report>();
+                sQLControl_hospital_report.UpdateByDefulteExtra(null, value);
 
                 returnData.Result = $"[{System.Reflection.MethodBase.GetCurrentMethod().Name}] 成功設定資料審核完成";
                 returnData.TimeTaken = myTimerBasic.ToString();
                 returnData.Code = 200;
                 string json_out = returnData.JsonSerializationt(true);
-                returnData.Data = hostpital_ReportClass;
+                returnData.Data = hospital_ReportClass;
                 Logger.LogAddLine($"hospital_problem_report");
                 Logger.Log($"hospital_problem_report", $"{ json_out}");
                 Logger.LogAddLine($"hospital_problem_report");
@@ -1187,66 +1187,66 @@ namespace HsonAPI
         {
 
 
-            SQLControl sQLControl_hostpital_report = new SQLControl(Server, DB, "hostpital_report", UserName, Password, Port, SSLMode);
-            SQLControl sQLControl_hostpital_report_picture = new SQLControl(Server, DB, "hostpital_report_picture", UserName, Password, Port, SSLMode);
-            SQLControl sQLControl_hostpital_name = new SQLControl(Server, DB, "hostpital_name", UserName, Password, Port, SSLMode);
+            SQLControl sQLControl_hospital_report = new SQLControl(Server, DB, "hospital_report", UserName, Password, Port, SSLMode);
+            SQLControl sQLControl_hospital_report_picture = new SQLControl(Server, DB, "hospital_report_picture", UserName, Password, Port, SSLMode);
+            SQLControl sQLControl_hospital_name = new SQLControl(Server, DB, "hospital_name", UserName, Password, Port, SSLMode);
 
 
             List<Table> tables = new List<Table>();
 
-            Table table_hostpital_report = new Table("hostpital_report");
-            table_hostpital_report.Server = Server;
-            table_hostpital_report.DBName = DB;
-            table_hostpital_report.Username = UserName;
-            table_hostpital_report.Password = Password;
-            table_hostpital_report.Port = Port.ToString();
-            table_hostpital_report.AddColumnList("GUID", Table.StringType.VARCHAR, 50, Table.IndexType.PRIMARY);
-            table_hostpital_report.AddColumnList("hospital_name_guid", Table.StringType.VARCHAR, 50, Table.IndexType.INDEX);            
-            table_hostpital_report.AddColumnList("標題", Table.StringType.VARCHAR, 500, Table.IndexType.None);
-            table_hostpital_report.AddColumnList("內容", Table.StringType.VARCHAR, 2000, Table.IndexType.None);
-            table_hostpital_report.AddColumnList("回報時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
-            table_hostpital_report.AddColumnList("發生時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
-            table_hostpital_report.AddColumnList("完成時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
-            table_hostpital_report.AddColumnList("審核時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
-            table_hostpital_report.AddColumnList("是否完成", Table.StringType.VARCHAR, 10, Table.IndexType.None);
-            table_hostpital_report.AddColumnList("是否審核", Table.StringType.VARCHAR, 10, Table.IndexType.None);
-            table_hostpital_report.AddColumnList("回報人員", Table.StringType.VARCHAR, 50, Table.IndexType.None);
-            table_hostpital_report.AddColumnList("完成人員", Table.StringType.VARCHAR, 50, Table.IndexType.None);
+            Table table_hospital_report = new Table("hospital_report");
+            table_hospital_report.Server = Server;
+            table_hospital_report.DBName = DB;
+            table_hospital_report.Username = UserName;
+            table_hospital_report.Password = Password;
+            table_hospital_report.Port = Port.ToString();
+            table_hospital_report.AddColumnList("GUID", Table.StringType.VARCHAR, 50, Table.IndexType.PRIMARY);
+            table_hospital_report.AddColumnList("hospital_name_guid", Table.StringType.VARCHAR, 50, Table.IndexType.INDEX);            
+            table_hospital_report.AddColumnList("標題", Table.StringType.VARCHAR, 500, Table.IndexType.None);
+            table_hospital_report.AddColumnList("內容", Table.StringType.VARCHAR, 2000, Table.IndexType.None);
+            table_hospital_report.AddColumnList("回報時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
+            table_hospital_report.AddColumnList("發生時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
+            table_hospital_report.AddColumnList("完成時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
+            table_hospital_report.AddColumnList("審核時間", Table.DateType.DATETIME, 500, Table.IndexType.INDEX);
+            table_hospital_report.AddColumnList("是否完成", Table.StringType.VARCHAR, 10, Table.IndexType.None);
+            table_hospital_report.AddColumnList("是否審核", Table.StringType.VARCHAR, 10, Table.IndexType.None);
+            table_hospital_report.AddColumnList("回報人員", Table.StringType.VARCHAR, 50, Table.IndexType.None);
+            table_hospital_report.AddColumnList("完成人員", Table.StringType.VARCHAR, 50, Table.IndexType.None);
 
-            if (!sQLControl_hostpital_report.IsTableCreat()) sQLControl_hostpital_report.CreatTable(table_hostpital_report);
-            else sQLControl_hostpital_report.CheckAllColumnName(table_hostpital_report, true);
-            tables.Add(table_hostpital_report);
-
-
-            Table table_hostpital_report_picture = new Table("hostpital_report_picture");
-            table_hostpital_report_picture.Server = Server;
-            table_hostpital_report_picture.DBName = DB;
-            table_hostpital_report_picture.Username = UserName;
-            table_hostpital_report_picture.Password = Password;
-            table_hostpital_report_picture.Port = Port.ToString();
-            table_hostpital_report_picture.AddColumnList("GUID", Table.StringType.VARCHAR, 50, Table.IndexType.PRIMARY);
-            table_hostpital_report_picture.AddColumnList("hostpital_report_guid", Table.StringType.VARCHAR, 50, Table.IndexType.INDEX);
-            table_hostpital_report_picture.AddColumnList("picture", Table.StringType.LONGTEXT, 500, Table.IndexType.None);
-            table_hostpital_report_picture.AddColumnList("加入時間", Table.DateType.DATETIME, 500, Table.IndexType.None);
-            if (!sQLControl_hostpital_report_picture.IsTableCreat()) sQLControl_hostpital_report_picture.CreatTable(table_hostpital_report_picture);
-            else sQLControl_hostpital_report_picture.CheckAllColumnName(table_hostpital_report_picture, true);
-            tables.Add(table_hostpital_report_picture);
+            if (!sQLControl_hospital_report.IsTableCreat()) sQLControl_hospital_report.CreatTable(table_hospital_report);
+            else sQLControl_hospital_report.CheckAllColumnName(table_hospital_report, true);
+            tables.Add(table_hospital_report);
 
 
-            Table table_hostpital_name = new Table("hostpital_name");
-            table_hostpital_name.Server = Server;
-            table_hostpital_name.DBName = DB;
-            table_hostpital_name.Username = UserName;
-            table_hostpital_name.Password = Password;
-            table_hostpital_name.Port = Port.ToString();
-            table_hostpital_name.AddColumnList("GUID", Table.StringType.VARCHAR, 50, Table.IndexType.PRIMARY);
-            table_hostpital_name.AddColumnList("名稱", Table.StringType.VARCHAR, 200, Table.IndexType.None);
-            table_hostpital_name.AddColumnList("棟名", Table.StringType.VARCHAR, 200, Table.IndexType.None);
-            table_hostpital_name.AddColumnList("診別", Table.StringType.VARCHAR, 200, Table.IndexType.None);
+            Table table_hospital_report_picture = new Table("hospital_report_picture");
+            table_hospital_report_picture.Server = Server;
+            table_hospital_report_picture.DBName = DB;
+            table_hospital_report_picture.Username = UserName;
+            table_hospital_report_picture.Password = Password;
+            table_hospital_report_picture.Port = Port.ToString();
+            table_hospital_report_picture.AddColumnList("GUID", Table.StringType.VARCHAR, 50, Table.IndexType.PRIMARY);
+            table_hospital_report_picture.AddColumnList("hospital_report_guid", Table.StringType.VARCHAR, 50, Table.IndexType.INDEX);
+            table_hospital_report_picture.AddColumnList("picture", Table.StringType.LONGTEXT, 500, Table.IndexType.None);
+            table_hospital_report_picture.AddColumnList("加入時間", Table.DateType.DATETIME, 500, Table.IndexType.None);
+            if (!sQLControl_hospital_report_picture.IsTableCreat()) sQLControl_hospital_report_picture.CreatTable(table_hospital_report_picture);
+            else sQLControl_hospital_report_picture.CheckAllColumnName(table_hospital_report_picture, true);
+            tables.Add(table_hospital_report_picture);
 
-            if (!sQLControl_hostpital_name.IsTableCreat()) sQLControl_hostpital_name.CreatTable(table_hostpital_name);
-            else sQLControl_hostpital_name.CheckAllColumnName(table_hostpital_name, true);
-            tables.Add(table_hostpital_name);
+
+            Table table_hospital_name = new Table("hospital_name");
+            table_hospital_name.Server = Server;
+            table_hospital_name.DBName = DB;
+            table_hospital_name.Username = UserName;
+            table_hospital_name.Password = Password;
+            table_hospital_name.Port = Port.ToString();
+            table_hospital_name.AddColumnList("GUID", Table.StringType.VARCHAR, 50, Table.IndexType.PRIMARY);
+            table_hospital_name.AddColumnList("名稱", Table.StringType.VARCHAR, 200, Table.IndexType.None);
+            table_hospital_name.AddColumnList("棟名", Table.StringType.VARCHAR, 200, Table.IndexType.None);
+            table_hospital_name.AddColumnList("診別", Table.StringType.VARCHAR, 200, Table.IndexType.None);
+
+            if (!sQLControl_hospital_name.IsTableCreat()) sQLControl_hospital_name.CreatTable(table_hospital_name);
+            else sQLControl_hospital_name.CheckAllColumnName(table_hospital_name, true);
+            tables.Add(table_hospital_name);
 
             return tables.JsonSerializationt(true);
         }
