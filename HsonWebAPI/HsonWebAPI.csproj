@@ -3,10 +3,11 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <StartupObject>HsonAPI.Program</StartupObject>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>C:\Users\Administrator\source\repos\HsonAPI\HsonAPI\HsonAPI.xml</DocumentationFile>
+    <DocumentationFile>\HsonAPI_Project\HsonAPI\HsonWebAPI.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -69,7 +70,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="HsonAPI.xml">
+    <None Update="HsonWebAPI.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="HsonAPILib.xml">

@@ -34,6 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\HsonAPILib.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -147,4 +148,9 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\System.Text.Json.6.0.0\build\System.Text.Json.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Text.Json.6.0.0\build\System.Text.Json.targets'))" />
   </Target>
+  <PropertyGroup>
+    <PreBuildEvent>nIF EXIST "$(TargetDir)$(ProjectName).xml" (
+    del "$(TargetDir)$(ProjectName).xml"
+)</PreBuildEvent>
+  </PropertyGroup>
 </Project>

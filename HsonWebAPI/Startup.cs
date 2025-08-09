@@ -62,7 +62,7 @@ namespace HsonAPI
                
                 });
 
-                var xmlPath_HsonAPI = Path.Combine(AppContext.BaseDirectory, $"HsonAPI.xml");
+                var xmlPath_HsonAPI = Path.Combine(AppContext.BaseDirectory, $"HsonWebAPI.xml");
                 var xmlPath_HsonAPILib = Path.Combine(AppContext.BaseDirectory, $"HsonAPILib.xml");
 
                 options.IncludeXmlComments(xmlPath_HsonAPILib , true);
