@@ -68,7 +68,23 @@ namespace HsonAPILib
 
         /// <summary>更新時間</summary>
         [Description("更新時間,DATETIME,20,INDEX")]
-        更新時間
+        更新時間,
+
+        /// <summary>文件名稱</summary>
+        [Description("文件名稱,VARCHAR,255,NONE")]
+        文件名稱,
+
+        /// <summary>文件連結</summary>
+        [Description("文件連結,VARCHAR,500,NONE")]
+        文件連結,
+
+        /// <summary>文件版本</summary>
+        [Description("文件版本,VARCHAR,50,NONE")]
+        文件版本,
+
+        /// <summary>圖片連結</summary>
+        [Description("圖片連結,VARCHAR,500,NONE")]
+        圖片連結
     }
 
     /// <summary>
@@ -144,6 +160,22 @@ namespace HsonAPILib
         [JsonPropertyName("updated_at")]
         public string 更新時間 { get; set; }
 
+        /// <summary>文件名稱</summary>
+        [JsonPropertyName("doc_name")]
+        public string 文件名稱 { get; set; }
+
+        /// <summary>文件連結</summary>
+        [JsonPropertyName("doc_url")]
+        public string 文件連結 { get; set; }
+
+        /// <summary>文件版本</summary>
+        [JsonPropertyName("doc_version")]
+        public string 文件版本 { get; set; }
+
+        /// <summary>圖片連結</summary>
+        [JsonPropertyName("img_url")]
+        public string 圖片連結 { get; set; }
+
         /// <summary>子項清單（此產品包含哪些子項）</summary>
         [JsonPropertyName("child_components")]
         public List<productComponentNode> child_components { get; set; } = new List<productComponentNode>();
@@ -158,20 +190,13 @@ namespace HsonAPILib
             WriteIndented = false
         };
 
-        /// <summary>
-        /// 將 JSON 反序列化為條碼清單並過濾空值與重複值
-        /// </summary>
         private List<string> DeserializeBarcode(string json)
         {
             if (string.IsNullOrWhiteSpace(json)) return new List<string>();
-
             try
             {
                 var list = JsonSerializer.Deserialize<List<string>>(json, jsonSerializerOptions) ?? new List<string>();
-                return list
-                    .Where(b => !string.IsNullOrWhiteSpace(b))
-                    .Distinct()
-                    .ToList();
+                return list.Where(b => !string.IsNullOrWhiteSpace(b)).Distinct().ToList();
             }
             catch
             {
@@ -179,16 +204,10 @@ namespace HsonAPILib
             }
         }
 
-        /// <summary>
-        /// 將條碼清單序列化為 JSON
-        /// </summary>
         private string SerializeBarcode(List<string> barcodes)
         {
             if (barcodes == null) return "[]";
-            var filtered = barcodes
-                .Where(b => !string.IsNullOrWhiteSpace(b))
-                .Distinct()
-                .ToList();
+            var filtered = barcodes.Where(b => !string.IsNullOrWhiteSpace(b)).Distinct().ToList();
             return JsonSerializer.Serialize(filtered, jsonSerializerOptions);
         }
     }
@@ -199,31 +218,18 @@ namespace HsonAPILib
     [EnumDescription("product_components")]
     public enum enum_product_components
     {
-        /// <summary>唯一識別碼</summary>
         [Description("GUID,VARCHAR,50,PRIMARY")]
         GUID,
-
-        /// <summary>主產品 GUID</summary>
         [Description("parent_guid,VARCHAR,50,INDEX")]
         parent_guid,
-
-        /// <summary>子項 GUID</summary>
         [Description("child_guid,VARCHAR,50,INDEX")]
         child_guid,
-
-        /// <summary>數量</summary>
         [Description("數量,VARCHAR,50,NONE")]
         數量,
-
-        /// <summary>備註</summary>
         [Description("備註,VARCHAR,500,NONE")]
         備註,
-
-        /// <summary>建立時間</summary>
         [Description("建立時間,DATETIME,20,INDEX")]
         建立時間,
-
-        /// <summary>更新時間</summary>
         [Description("更新時間,DATETIME,20,INDEX")]
         更新時間
     }
@@ -233,31 +239,18 @@ namespace HsonAPILib
     /// </summary>
     public class productComponentNode
     {
-        /// <summary>子項唯一識別碼</summary>
         [JsonPropertyName("subitem_guid")]
         public string subitem_guid { get; set; }
-
-        /// <summary>子項代碼</summary>
         [JsonPropertyName("component_code")]
         public string 子項代碼 { get; set; }
-
-        /// <summary>子項名稱</summary>
         [JsonPropertyName("component_name")]
         public string 子項名稱 { get; set; }
-
-        /// <summary>數量</summary>
         [JsonPropertyName("qty")]
         public string 數量 { get; set; }
-
-        /// <summary>單位</summary>
         [JsonPropertyName("unit")]
         public string 單位 { get; set; }
-
-        /// <summary>價格</summary>
         [JsonPropertyName("price")]
         public string 價格 { get; set; }
-
-        /// <summary>子項清單（遞迴結構）</summary>
         [JsonPropertyName("child_components")]
         public List<productComponentNode> child_components { get; set; } = new List<productComponentNode>();
     }
@@ -267,31 +260,18 @@ namespace HsonAPILib
     /// </summary>
     public class product_componentsClass
     {
-        /// <summary>唯一識別碼</summary>
         [JsonPropertyName("GUID")]
         public string GUID { get; set; }
-
-        /// <summary>主產品 GUID</summary>
         [JsonPropertyName("parent_guid")]
         public string parent_guid { get; set; }
-
-        /// <summary>子項 GUID</summary>
         [JsonPropertyName("child_guid")]
         public string child_guid { get; set; }
-
-        /// <summary>數量</summary>
         [JsonPropertyName("qty")]
         public string 數量 { get; set; }
-
-        /// <summary>備註</summary>
         [JsonPropertyName("note")]
         public string 備註 { get; set; }
-
-        /// <summary>建立時間</summary>
         [JsonPropertyName("created_at")]
         public string 建立時間 { get; set; }
-
-        /// <summary>更新時間</summary>
         [JsonPropertyName("updated_at")]
         public string 更新時間 { get; set; }
     }
