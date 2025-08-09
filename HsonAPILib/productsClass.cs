@@ -176,13 +176,19 @@ namespace HsonAPILib
         [JsonPropertyName("img_url")]
         public string 圖片連結 { get; set; }
 
+        [JsonPropertyName("child_count")]
+        public int child_count { get; set; }
+
+        [JsonPropertyName("parent_count")]
+        public int parent_count { get; set; }
+
         /// <summary>子項清單（此產品包含哪些子項）</summary>
         [JsonPropertyName("child_components")]
-        public List<productComponentNode> child_components { get; set; } = new List<productComponentNode>();
+        public List<product_componentsClass> child_components { get; set; } = new List<product_componentsClass>();
 
         /// <summary>所屬組合品清單（此產品被哪些組合品使用）</summary>
         [JsonPropertyName("parent_products")]
-        public List<productComponentNode> parent_products { get; set; } = new List<productComponentNode>();
+        public List<product_componentsClass> parent_products { get; set; } = new List<product_componentsClass>();
 
         private static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
         {
@@ -213,17 +219,19 @@ namespace HsonAPILib
     }
 
     /// <summary>
-    /// 產品組成關聯表欄位枚舉
+    /// 產品組成關聯表欄位枚舉（使用產品代碼做關聯）
     /// </summary>
     [EnumDescription("product_components")]
     public enum enum_product_components
     {
         [Description("GUID,VARCHAR,50,PRIMARY")]
         GUID,
-        [Description("parent_guid,VARCHAR,50,INDEX")]
-        parent_guid,
-        [Description("child_guid,VARCHAR,50,INDEX")]
-        child_guid,
+        /// <summary>父產品代碼</summary>
+        [Description("parent_code,VARCHAR,50,INDEX")]
+        parent_code,
+        /// <summary>子項代碼</summary>
+        [Description("child_code,VARCHAR,50,INDEX")]
+        child_code,
         [Description("數量,VARCHAR,50,NONE")]
         數量,
         [Description("備註,VARCHAR,500,NONE")]
@@ -233,46 +241,50 @@ namespace HsonAPILib
         [Description("更新時間,DATETIME,20,INDEX")]
         更新時間
     }
-
     /// <summary>
-    /// 子項節點類別（可遞迴表示 BOM）
-    /// </summary>
-    public class productComponentNode
-    {
-        [JsonPropertyName("subitem_guid")]
-        public string subitem_guid { get; set; }
-        [JsonPropertyName("component_code")]
-        public string 子項代碼 { get; set; }
-        [JsonPropertyName("component_name")]
-        public string 子項名稱 { get; set; }
-        [JsonPropertyName("qty")]
-        public string 數量 { get; set; }
-        [JsonPropertyName("unit")]
-        public string 單位 { get; set; }
-        [JsonPropertyName("price")]
-        public string 價格 { get; set; }
-        [JsonPropertyName("child_components")]
-        public List<productComponentNode> child_components { get; set; } = new List<productComponentNode>();
-    }
-
-    /// <summary>
-    /// 產品組成關聯資料類別
+    /// 產品組成關聯資料類別（使用產品代碼做關聯）
     /// </summary>
     public class product_componentsClass
     {
         [JsonPropertyName("GUID")]
         public string GUID { get; set; }
-        [JsonPropertyName("parent_guid")]
-        public string parent_guid { get; set; }
-        [JsonPropertyName("child_guid")]
-        public string child_guid { get; set; }
+
+        /// <summary>父產品代碼</summary>
+        [JsonPropertyName("parent_code")]
+        public string parent_code { get; set; }
+
+        /// <summary>子項代碼</summary>
+        [JsonPropertyName("child_code")]
+        public string child_code { get; set; }
+
         [JsonPropertyName("qty")]
         public string 數量 { get; set; }
+
         [JsonPropertyName("note")]
         public string 備註 { get; set; }
+
         [JsonPropertyName("created_at")]
         public string 建立時間 { get; set; }
+
         [JsonPropertyName("updated_at")]
         public string 更新時間 { get; set; }
+
+        // === JOIN 後的產品資訊 ===
+        [JsonPropertyName("product_name")]
+        public string 產品名稱 { get; set; }
+
+        [JsonPropertyName("brand")]
+        public string 廠牌 { get; set; }
+
+        [JsonPropertyName("price")]
+        public string 售價 { get; set; }
+
+        [JsonPropertyName("status")]
+        public string 狀態 { get; set; }
+
+        [JsonPropertyName("child_components")]
+        public List<product_componentsClass> child_components { get; set; } = new List<product_componentsClass>();
     }
+
+
 }
