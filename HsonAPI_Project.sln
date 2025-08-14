@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HsonWebAPI", "HsonWebAPI\Hs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api_test", "api_test\api_test.csproj", "{54C208E9-8A57-4F1C-BB8D-2B72BC31426C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "(api_test)VerifyProductStructure", "(api_test)VerifyProductStructure\(api_test)VerifyProductStructure.csproj", "{7E0C0445-C5F1-44F6-B905-0869E7D933A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{54C208E9-8A57-4F1C-BB8D-2B72BC31426C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54C208E9-8A57-4F1C-BB8D-2B72BC31426C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54C208E9-8A57-4F1C-BB8D-2B72BC31426C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E0C0445-C5F1-44F6-B905-0869E7D933A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E0C0445-C5F1-44F6-B905-0869E7D933A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E0C0445-C5F1-44F6-B905-0869E7D933A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E0C0445-C5F1-44F6-B905-0869E7D933A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

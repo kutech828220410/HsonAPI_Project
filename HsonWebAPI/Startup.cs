@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +52,13 @@ namespace HsonAPI
             });
 
             services.AddControllers();
+            services.Configure<ForwardedHeadersOptions>(opts =>
+            {
+                opts.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                // 如有固定可信任 Proxy，可加入：
+                // opts.KnownProxies.Add(IPAddress.Parse("172.18.0.2"));
+            });
+
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1",
@@ -82,7 +90,7 @@ namespace HsonAPI
                 app.UseDeveloperExceptionPage();
              
             }
-
+            app.UseForwardedHeaders();
             app.UseCors(builder =>
             {
                 builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowed(_ => true).AllowCredentials();

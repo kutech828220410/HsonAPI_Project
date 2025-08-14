@@ -39,8 +39,8 @@ namespace HsonAPILib
         廠牌,
 
         /// <summary>產品分類（如藥品、食品、器材等）</summary>
-        [Description("類別,VARCHAR,100,NONE")]
-        類別,
+        [Description("產品分類,VARCHAR,100,NONE")]
+        產品分類,
 
         /// <summary>單位（如盒、瓶、組等）</summary>
         [Description("單位,VARCHAR,50,NONE")]
@@ -118,7 +118,7 @@ namespace HsonAPILib
 
         /// <summary>產品分類</summary>
         [JsonPropertyName("category")]
-        public string 類別 { get; set; }
+        public string 產品分類 { get; set; }
 
         /// <summary>單位</summary>
         [JsonPropertyName("unit")]
@@ -127,6 +127,10 @@ namespace HsonAPILib
         /// <summary>售價</summary>
         [JsonPropertyName("price")]
         public string 售價 { get; set; }
+
+        /// <summary>成本</summary>
+        [JsonPropertyName("cost")]
+        public string 成本 { get; set; }
 
         /// <summary>狀態</summary>
         [JsonPropertyName("status")]
@@ -226,10 +230,8 @@ namespace HsonAPILib
     {
         [Description("GUID,VARCHAR,50,PRIMARY")]
         GUID,
-        /// <summary>父產品代碼</summary>
         [Description("parent_code,VARCHAR,50,INDEX")]
         parent_code,
-        /// <summary>子項代碼</summary>
         [Description("child_code,VARCHAR,50,INDEX")]
         child_code,
         [Description("數量,VARCHAR,50,NONE")]
@@ -278,6 +280,12 @@ namespace HsonAPILib
 
         [JsonPropertyName("price")]
         public string 售價 { get; set; }
+
+        [JsonPropertyName("cost")]
+        public string 成本 { get; set; }
+
+        [JsonPropertyName("spec")]
+        public string 規格 { get; set; }
 
         [JsonPropertyName("status")]
         public string 狀態 { get; set; }
