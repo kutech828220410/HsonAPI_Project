@@ -13,7 +13,7 @@ using System.Text.Json.Serialization;
 using System.Configuration;
 using HsonAPILib;
 using MySql.Data;
-namespace HsonAPI
+namespace HsonWebAPI
 {
     /// <summary>
     /// 問題回報單元

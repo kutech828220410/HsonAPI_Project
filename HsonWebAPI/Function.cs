@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using HsonAPILib;
 using Microsoft.AspNetCore.Http;
 using Basic;
-namespace HsonAPI
+namespace HsonWebAPI
 {
     public static class Method
     {

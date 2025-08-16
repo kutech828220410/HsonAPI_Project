@@ -121,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicClass.cs" />
+    <Compile Include="bomClass.cs" />
     <Compile Include="clientClass.cs" />
     <Compile Include="decodeClass.cs" />
     <Compile Include="hospital_nameClass.cs" />

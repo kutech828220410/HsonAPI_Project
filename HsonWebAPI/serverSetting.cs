@@ -12,7 +12,7 @@ using System.Text.Json.Serialization;
 using System.Configuration;
 using HsonAPILib;
 
-namespace HsonAPI
+namespace HsonWebAPI
 {
     /// <summary>
     /// Server 設定管理 API

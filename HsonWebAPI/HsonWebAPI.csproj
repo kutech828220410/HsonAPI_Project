@@ -1,13 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <StartupObject>HsonAPI.Program</StartupObject>
+    <StartupObject>HsonWebAPI.Program</StartupObject>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>\HsonAPI_Project\HsonAPI\HsonWebAPI.xml</DocumentationFile>
+    <DocumentationFile>\HsonAPI_Project\HsonWebAPI\HsonWebAPI.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 

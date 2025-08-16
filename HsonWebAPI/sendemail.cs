@@ -17,7 +17,7 @@ using RDPSessionManager;
 using MyEmail;
 using System.Diagnostics;
 
-namespace HsonAPI
+namespace HsonWebAPI
 {
     [Route("[controller]")]
     public class sendemail : ControllerBase

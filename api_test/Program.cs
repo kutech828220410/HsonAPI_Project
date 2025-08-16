@@ -34,7 +34,7 @@ namespace ClientConsoleTest
                 電話 = "02-87654321",
                 電子郵件 = "mei@example.com",
                 職稱 = "藥劑主任",
-                主要聯絡人 = false,
+                主要聯絡人 = "1",
                 備註 = "副聯絡人"
             });
             await ConfirmAndRun(client1);
@@ -83,7 +83,7 @@ namespace ClientConsoleTest
                         電話 = "02-12345678",
                         電子郵件 = "ming@example.com",
                         職稱 = "藥師",
-                        主要聯絡人 = true,
+                        主要聯絡人 = "1",
                         備註 = "主要聯絡人"
                     }
                 }

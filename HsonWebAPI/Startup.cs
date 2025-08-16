@@ -22,7 +22,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using Swashbuckle.AspNetCore.ReDoc;
 using Swashbuckle.AspNetCore.Newtonsoft;
 using Swashbuckle.AspNetCore;
-namespace HsonAPI
+namespace HsonWebAPI
 {
     public class Startup
     {

@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>HsonAPI</name>
+        <name>HsonWebAPI</name>
     </assembly>
     <members>
-        <member name="T:HsonAPI.hospital_problem_report">
+        <member name="T:HsonWebAPI.hospital_problem_report">
             <summary>
             問題回報單元
             </summary>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_init(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_init(HsonAPILib.returnData)">
             <summary>
             初始化醫院問題回報資料庫
             </summary>
@@ -27,7 +27,7 @@
             <param name="returnData">共用傳遞資料結構</param>
             <returns></returns> 
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_add_hospital_name(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_add_hospital_name(HsonAPILib.returnData)">
             <summary>
             新增醫院名稱
             </summary>
@@ -50,7 +50,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_delete_hospital_name_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_delete_hospital_name_by_guid(HsonAPILib.returnData)">
             <summary>
             以GUID刪除醫院名稱
             </summary>
@@ -71,7 +71,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_get_hospital_name(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_get_hospital_name(HsonAPILib.returnData)">
             <summary>
             取得所有醫院名稱
             </summary>
@@ -89,7 +89,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_get_hospital_name_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_get_hospital_name_by_guid(HsonAPILib.returnData)">
             <summary>
             以GUID取得所有醫院名稱
             </summary>
@@ -110,7 +110,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_add_hospital_report(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_add_hospital_report(HsonAPILib.returnData)">
             <summary>
             新增問題回報資料
             </summary>
@@ -136,7 +136,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_delete_hospital_report_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_delete_hospital_report_by_guid(HsonAPILib.returnData)">
             <summary>
             以GUID刪除問題回報資料
             </summary>
@@ -157,7 +157,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_edit_hospital_report_content_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_edit_hospital_report_content_by_guid(HsonAPILib.returnData)">
             <summary>
             修改問題回報資料內容
             </summary>
@@ -180,7 +180,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_get_all_hospital_report(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_get_all_hospital_report(HsonAPILib.returnData)">
             <summary>
             取得問題回報資料(不含圖片)
             </summary>
@@ -197,7 +197,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_get_hospital_report_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_get_hospital_report_by_guid(HsonAPILib.returnData)">
             <summary>
             以GUID取得問題回報資料(包含圖片)
             </summary>
@@ -218,7 +218,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_add_picture_by_hospital_report_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_add_picture_by_hospital_report_guid(HsonAPILib.returnData)">
             <summary>
             新增圖片到回報資料
             </summary>
@@ -240,7 +240,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.delete_picture_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.delete_picture_by_guid(HsonAPILib.returnData)">
             <summary>
             以GUID刪除圖片
             </summary>
@@ -261,7 +261,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_set_hospital_report_finished_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_set_hospital_report_finished_by_guid(HsonAPILib.returnData)">
             <summary>
             以GUID設定問題回報資料完成
             </summary>
@@ -283,7 +283,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="M:HsonAPI.hospital_problem_report.POST_set_hospital_report_reviewed_by_guid(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.hospital_problem_report.POST_set_hospital_report_reviewed_by_guid(HsonAPILib.returnData)">
             <summary>
             以GUID設定問題回報資料審核完畢
             </summary>
@@ -304,7 +304,7 @@
             </remarks>
             <returns></returns>
         </member>
-        <member name="T:HsonAPI.serverSetting">
+        <member name="T:HsonWebAPI.serverSetting">
             <summary>
             Server 設定管理 API
             </summary>
@@ -312,7 +312,7 @@
             用於管理與查詢系統的伺服器連線設定資訊，例如：新增、刪除、初始化、依類別或單位查詢等。
             </remarks>
         </member>
-        <member name="M:HsonAPI.serverSetting.GET">
+        <member name="M:HsonWebAPI.serverSetting.GET">
             <summary>
             取得所有伺服器連線資訊
             </summary>
@@ -324,7 +324,7 @@
             </remarks>
             <returns>包含所有伺服器設定的資料清單</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.GET_init">
+        <member name="M:HsonWebAPI.serverSetting.GET_init">
             <summary>
             初始化資料表（建立 ServerSetting 資料表）
             </summary>
@@ -336,7 +336,7 @@
             </remarks>
             <returns>資料表建立結果</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_init(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_init(HsonAPILib.returnData)">
             <summary>
             初始化資料表（POST 版本）
             </summary>
@@ -351,7 +351,7 @@
             <param name="returnData">共用傳遞資料結構</param>
             <returns>資料表建立結果</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_add(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_add(HsonAPILib.returnData)">
             <summary>
             新增或更新伺服器連線資訊
             </summary>
@@ -373,7 +373,7 @@
             <param name="returnData">包含伺服器設定的資料物件清單</param>
             <returns>新增或更新後的結果</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_delete(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_delete(HsonAPILib.returnData)">
             <summary>
             刪除伺服器連線資訊
             </summary>
@@ -395,7 +395,7 @@
             <param name="returnData">包含伺服器設定的資料物件清單</param>
             <returns>刪除後的結果</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_get_serversetting_by_type(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_get_serversetting_by_type(HsonAPILib.returnData)">
             <summary>
             依類別取得伺服器連線資訊
             </summary>
@@ -410,7 +410,7 @@
             <param name="returnData">包含 ValueAry[0] = 類別</param>
             <returns>符合類別條件的伺服器設定清單</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.get_name(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.get_name(HsonAPILib.returnData)">
             <summary>
             取得調劑台與藥庫的設備名稱清單
             </summary>
@@ -424,7 +424,7 @@
             <param name="returnData">共用傳遞資料結構</param>
             <returns>符合條件的設備名稱清單</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_get_department_type(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_get_department_type(HsonAPILib.returnData)">
             <summary>
             依指定類別取得服務單位清單
             </summary>
@@ -439,7 +439,7 @@
             <param name="returnData">ValueAry[0] = 類別名稱</param>
             <returns>符合條件的服務單位名稱清單</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_get_serversetting_by_department_type(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_get_serversetting_by_department_type(HsonAPILib.returnData)">
             <summary>
             依單位取得伺服器連線資訊
             </summary>
@@ -454,7 +454,7 @@
             <param name="returnData">ValueAry[0] = 單位名稱</param>
             <returns>符合單位條件的伺服器設定清單</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_get_VM_Server(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_get_VM_Server(HsonAPILib.returnData)">
             <summary>
             取得 VM 伺服器資訊（網頁類別 + VM端）
             </summary>
@@ -467,7 +467,7 @@
             <param name="returnData">共用傳遞資料結構</param>
             <returns>符合條件的 VM 伺服器資訊</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_get_server(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_get_server(HsonAPILib.returnData)">
             <summary>
             依名稱、類別、內容取得伺服器資訊
             </summary>
@@ -482,7 +482,7 @@
             <param name="returnData">ValueAry[0] = 名稱, ValueAry[1] = 類別, ValueAry[2] = 內容</param>
             <returns>符合條件的伺服器資訊</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_get_web_peremeter(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_get_web_peremeter(HsonAPILib.returnData)">
             <summary>
             取得指定網頁模組啟用狀態
             </summary>
@@ -497,7 +497,7 @@
             <param name="returnData">ValueAry = 模組名稱清單</param>
             <returns>符合條件的模組設定清單</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.POST_get_web_peremeter_name(HsonAPILib.returnData)">
+        <member name="M:HsonWebAPI.serverSetting.POST_get_web_peremeter_name(HsonAPILib.returnData)">
             <summary>
             取得所有網頁模組參數名稱
             </summary>
@@ -512,23 +512,23 @@
             <param name="returnData">共用傳遞資料結構</param>
             <returns>模組名稱字串清單</returns>
         </member>
-        <member name="M:HsonAPI.serverSetting.CheckCreatTable">
+        <member name="M:HsonWebAPI.serverSetting.CheckCreatTable">
             <summary>
             檢查並建立資料表（使用預設連線參數）
             </summary>
         </member>
-        <member name="M:HsonAPI.serverSetting.CheckCreatTable(HsonAPILib.sys_serverSettingClass)">
+        <member name="M:HsonWebAPI.serverSetting.CheckCreatTable(HsonAPILib.sys_serverSettingClass)">
             <summary>
             檢查並建立資料表（指定連線參數）
             </summary>
         </member>
-        <member name="M:HsonAPI.serverSetting.GetAllServerSetting">
+        <member name="M:HsonWebAPI.serverSetting.GetAllServerSetting">
             <summary>
             取得所有 Server 設定資料
             </summary>
             <returns>伺服器設定清單</returns>
         </member>
-        <member name="T:HsonAPI.test">
+        <member name="T:HsonWebAPI.test">
             <summary>
             測試單元
             </summary>

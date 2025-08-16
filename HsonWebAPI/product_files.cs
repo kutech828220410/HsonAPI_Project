@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Threading.Tasks;
-namespace HsonAPI
+namespace HsonWebAPI
 {
     [Route("api/[controller]")]
     [ApiController]

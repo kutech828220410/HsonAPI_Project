@@ -13,7 +13,7 @@ using System.Configuration;
 using HsonAPILib;
 using MySql.Data;
 
-namespace HsonAPI
+namespace HsonWebAPI
 {
     /// <summary>
     /// 測試單元
