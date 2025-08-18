@@ -12,6 +12,11 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Threading.Tasks;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using NPOI.HPSF;
+
 namespace HsonWebAPI
 {
     [Route("api/[controller]")]
@@ -181,7 +186,7 @@ namespace HsonWebAPI
       IFormFile? file,                              // 單檔
       [FromForm] List<IFormFile>? files,            // 多檔 (files 或 files[])
       [FromForm] string product_code,
-      [FromForm] string file_category = "圖片",      // 建議：圖片/文件/製造方式/其他 或 image/document/...
+      [FromForm] string file_category = "圖片",      // 建議：圖片/文件
       [FromForm] string? display_name = null,
       [FromForm] string? note = null,
       [FromForm] string? version = null,
@@ -314,7 +319,7 @@ namespace HsonWebAPI
                                 sha.TransformBlock(buffer, 0, read, null, 0);
                                 totalWritten += read;
                             }
-                            sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+                            sha.TransformFinalBlock(System.Array.Empty<byte>(), 0, 0);
                             sha256Hex = BitConverter.ToString(sha.Hash!).Replace("-", "").ToLowerInvariant();
 
                             Console.WriteLine($"[upload] written bytes: {totalWritten}");
@@ -439,9 +444,6 @@ namespace HsonWebAPI
             }
         }
 
-      
-
-
         /// <summary>
         /// 取得產品圖片檔案清單
         /// </summary>
@@ -512,6 +514,7 @@ namespace HsonWebAPI
 
                 var servers = serverSetting.GetAllServerSetting();
                 var sv = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                var api01 = servers.myFind("Main", "網頁", "API01");
                 if (sv == null) { returnData.Code = -200; returnData.Result = "找不到 Server 設定"; return returnData.JsonSerializationt(); }
 
                 string tFiles = new enum_product_files().GetEnumDescription();
@@ -534,7 +537,10 @@ namespace HsonWebAPI
             LIMIT {offset},{pageSize};");
 
                 var list = dt.DataTableToRowList().SQLToClass<product_filesClass, enum_product_files>();
-
+                for (int i = 0; i < list.Count; i++)
+                {
+                    list[i].檔案網址 = $"{api01.Server}/{list[i].相對路徑}";
+                }
                 returnData.Code = 200;
                 returnData.Result = "OK";
                 returnData.TimeTaken = $"{t}";
@@ -730,46 +736,71 @@ namespace HsonWebAPI
             }
         }
         /// <summary>
-        /// 設定產品封面圖片
+        /// 設定產品封面圖片（並建立縮圖檔案）
         /// </summary>
         /// <remarks>
-        /// 呼叫此 API 可將指定產品的某張圖片設為封面。  
-        /// 系統會依據 `product_code` 與 `file_url` 找到對應的圖片紀錄，並將該圖片標記為封面，其他圖片的封面標記將自動取消。  
+        /// 呼叫此 API 可將指定產品的某張圖片設為封面，並自動產生一個縮小版圖片檔案作為代表圖。  
+        /// 系統會依據 `product_code` 與 `file_url` 找到對應的圖片紀錄，建立縮圖檔案後更新資料表。  
         /// 
         /// **設定邏輯：**
-        /// 1. 驗證 `Data` 欄位不可為空，且必須為陣列。  
-        /// 2. 每筆資料需包含：  
+        /// 1. 驗證 `ValueAry` 必須包含 `guid` 參數，用來鎖定目標檔案。  
+        /// 2. 驗證 `Data` 欄位不可為空，且必須包含：  
         ///    - `product_code`（產品代碼，必填）  
-        ///    - `file_url`（檔案連結，必填）。  
+        ///    - `file_url`（檔案連結，必填）  
         /// 3. 系統會：  
-        ///    - 將該 `product_code` 所有圖片的 `is_cover` 設為 false。  
-        ///    - 將符合 `file_url` 的圖片 `is_cover` 設為 true。  
-        /// 4. 若未找到圖片紀錄，回傳錯誤訊息。  
+        ///    - 讀取該產品代碼對應的檔案資料。  
+        ///    - 確認檔案類型必須為圖片。  
+        ///    - 產生縮圖檔案，存放於 `/wwwroot/uploads/products/{product_code}/` 資料夾。  
+        ///    - 更新產品資料表的 `圖片連結` 欄位為縮圖檔案的路徑。  
+        /// 4. 若找不到檔案紀錄或非圖片，回傳錯誤訊息。  
         /// 
         /// **注意事項：**
-        /// - `is_cover` 欄位為布林值（true/false），表示是否為封面。  
-        /// - 設定封面僅影響資料表，不會對實體檔案進行搬移或修改。  
+        /// - 縮圖檔案會加上 `_cover` 後綴，例如：`P001_cover.jpg`。  
+        /// - 縮圖大小限制最大寬度 320 px，並維持比例縮放。  
+        /// - 儲存為 JPEG 格式，壓縮品質 80%。  
         /// 
         /// **JSON 請求範例：**
         /// <code>
         /// {
         ///     "ServerName": "Main",
         ///     "ServerType": "網頁",
+        ///     "ValueAry": [ "guid=11111111-aaaa-bbbb-cccc-222222222222" ],
         ///     "Data": [
         ///         {
         ///             "product_code": "P001",
-        ///             "file_url": "https://example.com/images/P001_cover.jpg"
+        ///             "file_url": "https://example.com/images/P001.jpg"
         ///         }
         ///     ]
         /// }
         /// </code>
         /// 
-        /// **JSON 回應範例：**
+        /// **JSON 回應範例 (成功)：**
         /// <code>
         /// {
         ///     "Code": 200,
-        ///     "Result": "封面設定成功",
-        ///     "TimeTaken": "00:00:00.012"
+        ///     "Method": "set_product_cover",
+        ///     "Result": "已設定代表圖（縮圖版）",
+        ///     "TimeTaken": "00:00:00.012",
+        ///     "Data": {
+        ///         "product_code": "P001",
+        ///         "cover_url": "https://example.com/uploads/products/P001/P001_cover.jpg"
+        ///     }
+        /// }
+        /// </code>
+        /// 
+        /// **JSON 回應範例 (失敗)：**
+        /// <code>
+        /// {
+        ///     "Code": -200,
+        ///     "Method": "set_product_cover",
+        ///     "Result": "缺少 guid"
+        /// }
+        /// </code>
+        /// <code>
+        /// {
+        ///     "Code": -200,
+        ///     "Method": "set_product_cover",
+        ///     "Result": "此檔案非圖片類型，無法設為代表圖"
         /// }
         /// </code>
         /// </remarks>
@@ -788,6 +819,8 @@ namespace HsonWebAPI
 
                 var servers = serverSetting.GetAllServerSetting();
                 var sv = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                var api01 = servers.myFind("Main", "網頁", "API01");
+
                 if (sv == null) { returnData.Code = -200; returnData.Result = "找不到 Server 設定"; return returnData.JsonSerializationt(); }
 
                 string tFiles = new enum_product_files().GetEnumDescription();
@@ -810,14 +843,47 @@ namespace HsonWebAPI
                 if (prodRows.Count == 0) { returnData.Code = -200; returnData.Result = $"找不到產品代碼 {f.產品代碼}"; return returnData.JsonSerializationt(); }
 
                 var prod = prodRows[0].SQLToClass<productsClass, enum_products>();
-                prod.圖片連結 = f.檔案網址;
+                string baseDir = AppContext.BaseDirectory; // /app (Docker) 或 bin 路徑
+                string relativeDir = Path.Combine("wwwroot", "uploads", "products", prod.產品代碼);
+                string fullDir = Path.Combine(baseDir, relativeDir);
+                Directory.CreateDirectory(fullDir);
+
+                // === 新增縮圖邏輯 (ImageSharp) ===
+                string original_filename = Path.GetFileName(f.相對路徑);
+                string originalPath = Path.Combine(fullDir, original_filename); // 原始圖片完整路徑
+                string coverFileName = $"{Path.GetFileNameWithoutExtension(f.相對路徑)}_cover{Path.GetExtension(f.相對路徑)}";
+                string coverFullPath = Path.Combine(fullDir, coverFileName);
+
+                Console.WriteLine($"originalPath : {originalPath}");
+                Console.WriteLine($"coverFullPath : {coverFullPath}");
+
+                // 確保目錄存在
+                Directory.CreateDirectory(Path.GetDirectoryName(coverFullPath)!);
+
+                // 使用 ImageSharp 讀取並縮圖
+                using (var image = Image.Load(originalPath))
+                {
+                    int maxWidth = 320;
+                    if (image.Width > maxWidth)
+                    {
+                        int newHeight = (int)((double)image.Height / image.Width * maxWidth);
+                        image.Mutate(x => x.Resize(maxWidth, newHeight));
+                    }
+
+                    // 儲存成 JPEG 並指定壓縮品質
+                    image.Save(coverFullPath, new JpegEncoder { Quality = 80 });
+                }
+                string rel = $"/uploads/products/{prod.產品代碼}/{coverFileName}";
+                // 更新產品封面為縮圖連結
+                string coverUrl = $"{api01.Server}{rel}";
+                prod.圖片連結 = coverUrl;
                 prod.更新時間 = DateTime.Now.ToDateTimeString();
                 sqlProd.UpdateByDefulteExtra(null, prod.ClassToSQL<productsClass, enum_products>());
 
                 returnData.Code = 200;
-                returnData.Result = "已設定代表圖";
+                returnData.Result = "已設定代表圖（縮圖版）";
                 returnData.TimeTaken = $"{t}";
-                returnData.Data = new { product_code = f.產品代碼, cover_url = f.檔案網址 };
+                returnData.Data = new { product_code = f.產品代碼, cover_url = coverUrl };
                 return returnData.JsonSerializationt(true);
             }
             catch (Exception ex)
@@ -825,6 +891,188 @@ namespace HsonWebAPI
                 return new returnData { Code = -200, Method = "set_product_cover", Result = ex.Message }.JsonSerializationt(true);
             }
         }
+        /// <summary>
+        /// 取得所有產品封面圖片清單（若產品無封面則自動建立）
+        /// </summary>
+        /// <remarks>
+        /// 呼叫此 API 可一次性取得所有產品的封面圖片清單。  
+        /// 若某產品尚未設定封面圖片，系統會自動挑選一張該產品圖片檔案並建立縮圖，更新為封面。  
+        /// 
+        /// **查詢邏輯：**
+        /// 1. 一次讀取 `products` 資料表。  
+        /// 2. 一次讀取 `product_files` 資料表，並僅篩選 `檔案類型 = 圖片` 的紀錄。  
+        /// 3. 依產品代碼分組圖片檔案。  
+        /// 4. 若產品已有封面，直接回傳。  
+        /// 5. 若產品無封面：  
+        ///    - 從圖片檔案清單中挑選第一張圖片。  
+        ///    - 自動產生縮圖 `_cover`（最大寬度 320 px，JPEG 品質 80%）。  
+        ///    - 更新 `products.圖片連結` 欄位為縮圖檔案的路徑。  
+        /// 6. 回傳每個產品的 `product_code` 與 `cover_url`。  
+        /// 
+        /// **注意事項：**
+        /// - 縮圖檔案會加上 `_cover` 後綴，例如：`P001_cover.jpg`。  
+        /// - 縮圖檔案存放於 `/wwwroot/uploads/products/{product_code}/` 目錄下。  
+        /// - 縮圖大小限制最大寬度 320 px，並維持比例縮放。  
+        /// - 若產品完全沒有任何圖片檔案，`cover_url` 會為空字串。  
+        /// 
+        /// **JSON 請求範例：**
+        /// <code>
+        /// {
+        ///     "ServerName": "Main",
+        ///     "ServerType": "網頁",
+        ///     "ValueAry": []
+        /// }
+        /// </code>
+        /// 
+        /// **JSON 回應範例 (成功)：**
+        /// <code>
+        /// {
+        ///     "Code": 200,
+        ///     "Method": "get_all_product_covers",
+        ///     "Result": "查詢成功",
+        ///     "TimeTaken": "00:00:00.050",
+        ///     "Data": [
+        ///         {
+        ///             "product_code": "P001",
+        ///             "cover_url": "https://example.com/uploads/products/P001/P001_cover.jpg"
+        ///         },
+        ///         {
+        ///             "product_code": "P002",
+        ///             "cover_url": "https://example.com/uploads/products/P002/P002_cover.jpg"
+        ///         }
+        ///     ]
+        /// }
+        /// </code>
+        /// 
+        /// **JSON 回應範例 (失敗)：**
+        /// <code>
+        /// {
+        ///     "Code": -200,
+        ///     "Method": "get_all_product_covers",
+        ///     "Result": "找不到任何產品資料"
+        /// }
+        /// </code>
+        /// <code>
+        /// {
+        ///     "Code": -200,
+        ///     "Method": "get_all_product_covers",
+        ///     "Result": "找不到任何圖片檔案"
+        /// }
+        /// </code>
+        /// </remarks>
+
+        [HttpPost("get_all_product_covers")]
+        public string get_all_product_covers([FromBody] returnData returnData)
+        {
+            var t = new MyTimerBasic();
+            returnData.Method = "get_all_product_covers";
+            try
+            {
+                var servers = serverSetting.GetAllServerSetting();
+                var sv = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                var api01 = servers.myFind("Main", "網頁", "API01");
+
+                if (sv == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string tProd = new enum_products().GetEnumDescription();
+                string tFiles = new enum_product_files().GetEnumDescription();
+
+                var sqlProd = new SQLControl(sv.Server, sv.DBName, tProd, sv.User, sv.Password, sv.Port.StringToUInt32(), SSLMode);
+                var sqlFiles = new SQLControl(sv.Server, sv.DBName, tFiles, sv.User, sv.Password, sv.Port.StringToUInt32(), SSLMode);
+
+                // 1. 一次讀取所有產品
+                var prodRows = sqlProd.GetAllRows(null);
+                if (prodRows.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到任何產品資料";
+                    return returnData.JsonSerializationt();
+                }
+                var products = prodRows
+                    .Select(r => r.SQLToClass<productsClass, enum_products>())
+                    .ToDictionary(p => p.產品代碼, p => p);
+
+                // 2. 直接從資料庫篩選 "檔案類型 = 圖片"
+                var fileRows = sqlFiles.GetRowsByDefult(null, (int)enum_product_files.檔案類型, "圖片");
+                var imageFiles = fileRows
+                    .Select(r => r.SQLToClass<product_filesClass, enum_product_files>())
+                    .GroupBy(f => f.產品代碼)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                List<object> resultList = new List<object>();
+
+                foreach (var kv in products)
+                {
+                    var prod = kv.Value;
+
+                    // 如果產品沒有封面，且有圖片檔案可用 → 建立縮圖
+                    if (string.IsNullOrEmpty(prod.圖片連結) && imageFiles.ContainsKey(prod.產品代碼))
+                    {
+                        var imageFile = imageFiles[prod.產品代碼].FirstOrDefault();
+                        if (imageFile != null)
+                        {
+                            string baseDir = AppContext.BaseDirectory; // /app (Docker) 或 bin 路徑
+                            string relativeDir = Path.Combine("wwwroot", "uploads", "products", prod.產品代碼);
+                            string fullDir = Path.Combine(baseDir, relativeDir);
+                            Directory.CreateDirectory(fullDir);
+
+                            string original_filename = Path.GetFileName(imageFile.相對路徑);
+                            string originalPath = Path.Combine(fullDir, original_filename);
+                            string coverFileName = $"{Path.GetFileNameWithoutExtension(original_filename)}_cover{Path.GetExtension(original_filename)}";
+                            string coverFullPath = Path.Combine(fullDir, coverFileName);
+
+                            // 確保目錄存在
+                            Directory.CreateDirectory(Path.GetDirectoryName(coverFullPath)!);
+
+                            // 產生縮圖
+                            using (var image = SixLabors.ImageSharp.Image.Load(originalPath))
+                            {
+                                int maxWidth = 320;
+                                if (image.Width > maxWidth)
+                                {
+                                    int newHeight = (int)((double)image.Height / image.Width * maxWidth);
+                                    image.Mutate(x => x.Resize(maxWidth, newHeight));
+                                }
+
+                                image.Save(coverFullPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder { Quality = 80 });
+                            }
+
+                            string rel = $"/uploads/products/{prod.產品代碼}/{coverFileName}";
+                            string coverUrl = $"{api01.Server}{rel}";
+                            prod.圖片連結 = coverUrl;
+                            prod.更新時間 = DateTime.Now.ToDateTimeString();
+
+                            // 更新 DB
+                            sqlProd.UpdateByDefulteExtra(null, prod.ClassToSQL<productsClass, enum_products>());
+                        }
+                    }
+
+                    resultList.Add(new productsClass()
+                    {
+                        產品代碼 = prod.產品代碼,
+                        圖片連結 = prod.圖片連結 ?? ""
+                    });
+                }
+
+                returnData.Code = 200;
+                returnData.Result = "查詢成功";
+                returnData.TimeTaken = $"{t}";
+                returnData.Data = resultList;
+
+                return returnData.JsonSerializationt(true);
+            }
+            catch (Exception ex)
+            {
+                return new returnData { Code = -200, Method = "get_all_product_covers", Result = ex.Message }.JsonSerializationt(true);
+            }
+        }
+
+
 
         private static string SanitizeCode(string code) =>
             string.IsNullOrWhiteSpace(code) ? "unknown" : Regex.Replace(code.Trim(), @"[^A-Za-z0-9_\-]", "_");

@@ -293,6 +293,5 @@ namespace HsonAPILib
         [JsonPropertyName("child_components")]
         public List<product_componentsClass> child_components { get; set; } = new List<product_componentsClass>();
     }
-
-
+   
 }

@@ -1,12 +1,16 @@
 ﻿using Basic;
 using HsonAPILib; // 引用 enum_project_boms, enum_bom_items, enum_bom_documents
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using SQLUI;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace HsonWebAPI
@@ -184,6 +188,32 @@ namespace HsonWebAPI
                 // 5) 查詢資料
                 var dt = sqlBom.WtrteCommandAndExecuteReader(sql);
                 var boms = dt.DataTableToRowList().SQLToClass<ProjectBomClass, enum_project_boms>() ?? new List<ProjectBomClass>();
+
+                // 5.1) 計算每個 BOM 的項目數量
+                if (boms.Count > 0)
+                {
+                    string bomGuids = string.Join(",", boms.Select(b => $"'{Esc(b.GUID)}'"));
+                    string itemsTable = new enum_bom_items().GetEnumDescription();
+                    string sqlCount = $@"
+        SELECT BomGUID, COUNT(*) as cnt
+        FROM {conf.DBName}.{itemsTable}
+        WHERE BomGUID IN ({bomGuids})
+        GROUP BY BomGUID";
+
+                    var dtCount = sqlBom.WtrteCommandAndExecuteReader(sqlCount);
+                    var countDict = dtCount.AsEnumerable().ToDictionary(
+                        row => row["BomGUID"].ToString(),
+                        row => row["cnt"].ToString()
+                    );
+
+                    foreach (var bom in boms)
+                    {
+                        if (countDict.ContainsKey(bom.GUID))
+                            bom.totalItems = countDict[bom.GUID];  // 設定項目數量
+                        else
+                            bom.totalItems = "0";
+                    }
+                }
 
                 // 6) 組合回傳
                 returnData.Code = 200;
@@ -379,6 +409,7 @@ namespace HsonWebAPI
 
                     var row = new object[Enum.GetValues(typeof(enum_project_boms)).Length];
                     row[(int)enum_project_boms.GUID] = guid;
+                    row[(int)enum_project_boms.ID] = bom.ID ?? "";
                     row[(int)enum_project_boms.ProjectGUID] = bom.ProjectGUID ?? "";
                     row[(int)enum_project_boms.ProjectID] = bom.ProjectID ?? "";
                     row[(int)enum_project_boms.name] = bom.name ?? "";
@@ -1593,6 +1624,480 @@ namespace HsonWebAPI
                 returnData.Result = $"Exception: {ex.Message}";
                 return returnData.JsonSerializationt(true);
             }
+        }
+
+
+        /// <summary>
+        /// 獲取 BOM 文件清單
+        /// </summary>
+        /// <remarks>
+        /// 依據指定的 <c>BomGUID</c> 取得其所有相關文件清單。
+        ///
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "ValueAry": [ "BomGUID=550E8400-E29B-41D4-A716-446655440000" ]
+        /// }
+        /// ```
+        ///
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Code": 200,
+        ///   "Method": "get_bom_documents",
+        ///   "Result": "OK",
+        ///   "TimeTaken": "12.5ms",
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "DOC001-GUID-123",
+        ///       "ID": "DOC001",
+        ///       "BomGUID": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "fileName": "system_file.pdf",
+        ///       "originalName": "設計圖.pdf",
+        ///       "type": "圖面",
+        ///       "fileSize": "102400",
+        ///       "uploadDate": "2025-08-16",
+        ///       "uploadedBy": "王小明",
+        ///       "url": "/documents/system_file.pdf",
+        ///       "notes": "第一版"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("get_bom_documents")]
+        public string get_bom_documents([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "get_bom_documents";
+
+            try
+            {
+                // 驗證參數
+                string bomGuid = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("BomGUID=", StringComparison.OrdinalIgnoreCase))?.Split('=')[1];
+                if (bomGuid.StringIsEmpty())
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "缺少 BomGUID 參數";
+                    return returnData.JsonSerializationt();
+                }
+
+                // DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string table = new enum_bom_documents().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+                string Esc(string s) => (s ?? "").Replace("'", "''");
+                string query = $"SELECT * FROM {conf.DBName}.{table} WHERE BomGUID='{Esc(bomGuid)}' ORDER BY uploadDate DESC";
+                var dt = sql.WtrteCommandAndExecuteReader(query);
+
+                var docs = dt.DataTableToRowList().SQLToClass<BomDocumentClass, enum_bom_documents>();
+
+                returnData.Code = 200;
+                returnData.Result = "OK";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = docs;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt();
+            }
+        }
+        /// <summary>
+        /// 上傳 BOM 文件
+        /// </summary>
+        /// <remarks>
+        /// 使用 multipart/form-data 上傳 BOM 文件。
+        ///
+        /// <b>Request 格式：</b>
+        /// - bomGUID: BOM 主檔 GUID（必填）
+        /// - userName: 上傳者名稱（必填）
+        /// - file: 檔案物件（必填）
+        /// - type: 文件類型（必填：圖面|規格書|技術文件|其他）
+        /// - notes: 備註（選填）
+        ///
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Code": 200,
+        ///   "Method": "upload_bom_document",
+        ///   "Result": "檔案上傳成功",
+        ///   "TimeTaken": "50.1ms",
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "NEW-DOC-GUID-001",
+        ///       "BomGUID": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "BomID": "12345",
+        ///       "fileName": "12345_設計圖_20250816_193000.pdf",
+        ///       "originalName": "設計圖.pdf",
+        ///       "type": "圖面",
+        ///       "fileSize": "2048576",
+        ///       "url": "/documents/12345_設計圖_20250816_193000.pdf",
+        ///       "uploadDate": "2025-08-16 19:30:00",
+        ///       "uploadedBy": "王小明"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("upload_bom_document")]
+        [RequestSizeLimit(30_000_000)] // 限制30MB
+        public string upload_bom_document([FromForm] string bomGUID, [FromForm] string userName, [FromForm] string type, [FromForm] string notes, [FromForm] IFormFile file)
+        {
+            var timer = new MyTimerBasic();
+            var returnData = new returnData { Method = "upload_bom_document" };
+
+            try
+            {
+                if (bomGUID.StringIsEmpty() || userName.StringIsEmpty() || file == null || file.Length == 0 || type.StringIsEmpty())
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "缺少必要參數 (bomGUID / userName / file / type)";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind("Main", "網頁", "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                // === Step1: 用 bomID 找 BOM 主檔 GUID ===
+                string bomTable = new enum_project_boms().GetEnumDescription();
+                var sqlBom = new SQLControl(conf.Server, conf.DBName, bomTable, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+                List<object[]> bomRows = sqlBom.GetRowsByDefult(null, (int)enum_project_boms.GUID, bomGUID);
+                if (bomRows.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"找不到對應的 BOM (GUID={bomGUID})";
+                    return returnData.JsonSerializationt();
+                }
+                string bomID = bomRows[0][(int)enum_project_boms.ID].ObjectToString();
+
+                // === Step2: 檔案處理 ===
+                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                string safeFileName = SanitizeFileName(Path.GetFileName(file.FileName));
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string ext = Path.GetExtension(safeFileName);
+                string baseName = Path.GetFileNameWithoutExtension(safeFileName);
+                string newFileName = $"{bomID}_{baseName}_{timestamp}{ext}";
+
+                string filePath = Path.Combine(folder, newFileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    file.CopyTo(stream);
+                }
+
+                FileInfo fi = new FileInfo(filePath);
+
+                // === Step3: 寫入文件表 ===
+                string docTable = new enum_bom_documents().GetEnumDescription();
+                var sqlDoc = new SQLControl(conf.Server, conf.DBName, docTable, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+                string now = DateTime.Now.ToDateTimeString();
+                string guid = Guid.NewGuid().ToString().ToUpper();
+
+                var ins = new object[Enum.GetValues(typeof(enum_bom_documents)).Length];
+                ins[(int)enum_bom_documents.GUID] = guid;
+                ins[(int)enum_bom_documents.BomGUID] = bomGUID; // ✅ 存 GUID，不是 ID
+                ins[(int)enum_bom_documents.ID] = bomID;
+                ins[(int)enum_bom_documents.fileName] = newFileName;
+                ins[(int)enum_bom_documents.originalName] = file.FileName;
+                ins[(int)enum_bom_documents.type] = type;
+                ins[(int)enum_bom_documents.fileSize] = fi.Length.ToString();
+                ins[(int)enum_bom_documents.uploadDate] = now;
+                ins[(int)enum_bom_documents.uploadedBy] = userName;
+                ins[(int)enum_bom_documents.url] = $"/documents/{newFileName}";
+                ins[(int)enum_bom_documents.notes] = notes ?? "";
+                sqlDoc.AddRow(null, ins);
+
+                var doc = new BomDocumentClass
+                {
+                    GUID = guid,
+                    ID = bomID,
+                    BomGUID = bomGUID,
+                    fileName = newFileName,
+                    originalName = file.FileName,
+                    type = type,
+                    fileSize = fi.Length.ToString(),
+                    uploadDate = now,
+                    uploadedBy = userName,
+                    url = $"/documents/{newFileName}",
+                    notes = notes
+                };
+
+                returnData.Code = 200;
+                returnData.Result = "檔案上傳成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = new List<BomDocumentClass> { doc };
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt();
+            }
+        }
+        /// <summary>
+        /// 刪除 BOM 文件
+        /// </summary>
+        /// <remarks>
+        /// 依 <c>GUID</c> 刪除 BOM 文件。
+        ///
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": [ { "GUID": "DOC-GUID-001" } ]
+        /// }
+        /// ```
+        ///
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Code": 200,
+        ///   "Method": "delete_bom_document",
+        ///   "Result": "刪除成功 1 筆",
+        ///   "TimeTaken": "8.9ms"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("delete_bom_document")]
+        public string delete_bom_document([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "delete_bom_document";
+
+            try
+            {
+                if (returnData.Data == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "Data 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                var input = returnData.Data.ObjToClass<List<BomDocumentClass>>();
+                if (input == null || input.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "Data 格式錯誤或無有效資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string table = new enum_bom_documents().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+                var deleted = new List<string>();
+                foreach (var doc in input)
+                {
+                    if (doc.GUID.StringIsEmpty()) continue;
+
+                    var rows = sql.GetRowsByDefult(null, (int)enum_bom_documents.GUID, doc.GUID);
+                    if (rows != null && rows.Count > 0)
+                    {
+                        sql.DeleteExtra(null, rows);
+                        deleted.Add(doc.GUID);
+                    }
+                }
+
+                returnData.Code = 200;
+                returnData.Result = $"刪除成功 {deleted.Count} 筆";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = deleted;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt();
+            }
+        }
+        /// <summary>
+        /// 下載 BOM 文件
+        /// </summary>
+        /// <remarks>
+        /// 依 <c>GUID</c> 下載 BOM 文件。
+        ///
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        //    "Data": [ { "GUID": "DOC-GUID-001" } ]
+        /// }
+        /// ```
+        ///
+        /// <b>成功回應：</b>
+        /// - Content-Disposition: attachment; filename="fallback.pdf"; filename*=UTF-8''設計圖.pdf
+        /// - Response Body: 檔案二進位串流
+        ///
+        /// <b>錯誤回應 JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Code": -200,
+        ///   "Method": "download_bom_document",
+        ///   "Result": "找不到檔案"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("download_bom_document")]
+        public IActionResult download_bom_document([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "download_bom_document";
+
+            try
+            {
+                if (returnData.Data == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "Data 不能為空";
+                    return new JsonResult(returnData);
+                }
+
+                var input = returnData.Data.ObjToClass<List<BomDocumentClass>>();
+                if (input == null || input.Count == 0 || input[0].GUID.StringIsEmpty())
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "缺少 GUID 參數";
+                    return new JsonResult(returnData);
+                }
+
+                string guid = input[0].GUID;
+
+                // 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return new JsonResult(returnData);
+                }
+
+                string table = new enum_bom_documents().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+                var rows = sql.GetRowsByDefult(null, (int)enum_bom_documents.GUID, guid);
+                if (rows == null || rows.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"找不到文件 (GUID={guid})";
+                    return new JsonResult(returnData);
+                }
+
+                var doc = rows[0].SQLToClass<BomDocumentClass, enum_bom_documents>();
+
+                // 檔案路徑
+                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents");
+                string filePath = Path.Combine(folder, doc.fileName);
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "檔案不存在於伺服器";
+                    return new JsonResult(returnData);
+                }
+
+                var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                string contentType = "application/octet-stream";
+
+                // 原始檔名（可能有中文）
+                string originalName = doc.originalName ?? doc.fileName;
+
+                // 安全 ASCII 檔名 (fallback)
+                string asciiFileName = ToEnglishOrAscii(Path.GetFileNameWithoutExtension(originalName)) + Path.GetExtension(originalName);
+                if (string.IsNullOrWhiteSpace(asciiFileName))
+                    asciiFileName = "download" + Path.GetExtension(originalName);
+
+                // UTF-8 檔名（正確編碼）
+                string utf8FileName = Uri.EscapeDataString(originalName);
+
+                // 設定 Content-Disposition header
+                Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{asciiFileName}\"; filename*=UTF-8''{utf8FileName}");
+
+                // 確保前端能讀到 header
+                Response.Headers.Add("Access-Control-Expose-Headers", "Content-Disposition, Content-Length, Content-Type");
+
+                return File(stream, contentType);
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = ex.Message;
+                return new JsonResult(returnData);
+            }
+        }
+
+
+
+        /// <summary>
+        /// 清理檔名，移除非法字元並將空白轉換為底線
+        /// </summary>
+        private string SanitizeFileName(string fileName)
+        {
+            string invalidChars = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            foreach (char c in invalidChars)
+            {
+                fileName = fileName.Replace(c.ToString(), "_");
+            }
+            return fileName.Replace(" ", "_");
+        }
+        /// <summary>
+        /// 將字串轉為 ASCII（移除中文與特殊字元）
+        /// </summary>
+        public static string ToEnglishOrAscii(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            // 1. 正規化字元（去掉重音符號）
+            string normalized = input.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder();
+
+            foreach (var c in normalized)
+            {
+                var uc = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (uc != UnicodeCategory.NonSpacingMark && c < 128)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            // 移除空白，避免 filename 有問題
+            return sb.ToString().Replace(" ", "_");
         }
     }
 }
