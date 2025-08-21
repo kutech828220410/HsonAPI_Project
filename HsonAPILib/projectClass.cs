@@ -6,8 +6,6 @@ using Basic;
 
 namespace HsonAPILib
 {
-    #region ===================== 專案主檔枚舉 =====================
-
     /// <summary>
     /// 專案主檔欄位枚舉
     /// </summary>
@@ -171,10 +169,6 @@ namespace HsonAPILib
         更新時間
     }
 
-    #endregion
-
-    #region ===================== 專案主檔資料類別 =====================
-
     /// <summary>
     /// 專案主檔資料類別（所有屬性為 string，對應前端 JSON 欄位）
     /// </summary>
@@ -303,10 +297,6 @@ namespace HsonAPILib
         public string 更新時間 { get; set; }
     }
 
-    #endregion
-
-    #region ===================== 專案 BOM 關聯枚舉 =====================
-
     /// <summary>
     /// 專案 BOM 關聯欄位枚舉
     /// </summary>
@@ -356,10 +346,6 @@ namespace HsonAPILib
         更新時間
     }
 
-    #endregion
-
-    #region ===================== 專案 BOM 關聯資料類別 =====================
-
     /// <summary>
     /// 專案 BOM 關聯資料類別（所有屬性為 string）
     /// </summary>
@@ -407,10 +393,6 @@ namespace HsonAPILib
         [JsonPropertyName("updatedAt")]
         public string 更新時間 { get; set; }
     }
-
-    #endregion
-
-    #region ===================== 專案里程碑枚舉 =====================
 
     /// <summary>
     /// 專案里程碑欄位枚舉
@@ -491,10 +473,6 @@ namespace HsonAPILib
         更新時間
     }
 
-    #endregion
-
-    #region ===================== 里程碑資料類別 =====================
-
     /// <summary>
     /// 專案里程碑資料類別（所有屬性為 string，對應前端 JSON 欄位）
     /// </summary>
@@ -573,9 +551,6 @@ namespace HsonAPILib
         public string 更新時間 { get; set; }
     }
 
-    #endregion
-
-    #region ===================== 專案統計資料類別（回傳用） =====================
 
     /// <summary>
     /// 專案統計資料類別（所有屬性為 string，對應前端 JSON 欄位）
@@ -639,9 +614,599 @@ namespace HsonAPILib
         public string 本月完成 { get; set; }
     }
 
-    #endregion
+    /// <summary>
+    /// 專案需求欄位枚舉
+    /// </summary>
+    [EnumDescription("project_requirements")]
+    public enum enum_project_requirements
+    {
+        /// <summary>唯一識別碼</summary>
+        [Description("GUID,VARCHAR,50,PRIMARY")]
+        GUID,
+
+        /// <summary>需求編號</summary>
+        [Description("ID,VARCHAR,50,UNIQUE")]
+        ID,
+
+        /// <summary>專案GUID</summary>
+        [Description("project_guid,VARCHAR,50,NONE")]
+        project_guid,
+
+        /// <summary>專案編號</summary>
+        [Description("project_id,VARCHAR,50,NONE")]
+        project_id,
+
+        /// <summary>請購類型</summary>
+        [Description("procurement_type,VARCHAR,20,NONE")]
+        procurement_type,
+
+        /// <summary>需求描述</summary>
+        [Description("description,TEXT,20,NONE")]
+        description,
+
+        /// <summary>數量</summary>
+        [Description("quantity,VARCHAR,50,NONE")]
+        quantity,
+
+        /// <summary>單位</summary>
+        [Description("unit,VARCHAR,20,NONE")]
+        unit,
+
+        /// <summary>需求狀態</summary>
+        [Description("status,VARCHAR,20,NONE")]
+        status,
+
+        /// <summary>優先級</summary>
+        [Description("priority,VARCHAR,10,NONE")]
+        priority,
+
+        /// <summary>需求期限</summary>
+        [Description("due_date,DATETIME,20,NONE")]
+        due_date,
+
+        /// <summary>請購日期</summary>
+        [Description("requested_date,DATETIME,20,NONE")]
+        requested_date,
+
+        /// <summary>核准日期</summary>
+        [Description("approved_date,DATETIME,20,NONE")]
+        approved_date,
+
+        /// <summary>採購日期</summary>
+        [Description("purchased_date,DATETIME,20,NONE")]
+        purchased_date,
+
+        /// <summary>交貨日期</summary>
+        [Description("delivered_date,DATETIME,20,NONE")]
+        delivered_date,
+
+        /// <summary>驗收日期</summary>
+        [Description("accepted_date,DATETIME,20,NONE")]
+        accepted_date,
+
+        /// <summary>預估成本</summary>
+        [Description("estimated_cost,VARCHAR,50,NONE")]
+        estimated_cost,
+
+        /// <summary>實際成本</summary>
+        [Description("actual_cost,VARCHAR,50,NONE")]
+        actual_cost,
+
+        /// <summary>核准預算</summary>
+        [Description("approved_budget,VARCHAR,50,NONE")]
+        approved_budget,
+
+        /// <summary>貨品ID</summary>
+        [Description("item_id,VARCHAR,50,NONE")]
+        item_id,
+
+        /// <summary>貨品名稱</summary>
+        [Description("item_name,VARCHAR,200,NONE")]
+        item_name,
+
+        /// <summary>貨品代碼</summary>
+        [Description("item_code,VARCHAR,50,NONE")]
+        item_code,
+
+        /// <summary>供應商名稱</summary>
+        [Description("supplier_name,VARCHAR,200,NONE")]
+        supplier_name,
+
+        /// <summary>BOM GUID</summary>
+        [Description("bom_guid,VARCHAR,50,NONE")]
+        bom_guid,
+
+        /// <summary>BOM 編號</summary>
+        [Description("bom_id,VARCHAR,50,NONE")]
+        bom_id,
+
+        /// <summary>是否來自BOM</summary>
+        [Description("is_from_bom,VARCHAR,5,NONE")]
+        is_from_bom,
+
+        /// <summary>採購單號</summary>
+        [Description("purchase_order_id,VARCHAR,50,NONE")]
+        purchase_order_id,
+
+        /// <summary>廠商報價</summary>
+        [Description("vendor_quote_amount,VARCHAR,50,NONE")]
+        vendor_quote_amount,
+
+        /// <summary>議價金額</summary>
+        [Description("negotiated_amount,VARCHAR,50,NONE")]
+        negotiated_amount,
+
+        /// <summary>請購人</summary>
+        [Description("requester,VARCHAR,100,NONE")]
+        requester,
+
+        /// <summary>核准者</summary>
+        [Description("approver,VARCHAR,100,NONE")]
+        approver,
+
+        /// <summary>採購人</summary>
+        [Description("purchaser,VARCHAR,100,NONE")]
+        purchaser,
+
+        /// <summary>規格要求</summary>
+        [Description("specifications,TEXT,20,NONE")]
+        specifications,
+
+        /// <summary>交貨地址</summary>
+        [Description("delivery_address,TEXT,20,NONE")]
+        delivery_address,
+
+        /// <summary>備註</summary>
+        [Description("notes,TEXT,20,NONE")]
+        notes,
+
+        /// <summary>是否啟用</summary>
+        [Description("is_active,VARCHAR,5,NONE")]
+        is_active,
+
+        /// <summary>建立者</summary>
+        [Description("created_by,VARCHAR,100,NONE")]
+        created_by,
+
+        /// <summary>建立時間</summary>
+        [Description("created_at,DATETIME,20,NONE")]
+        created_at,
+
+        /// <summary>更新者</summary>
+        [Description("updated_by,VARCHAR,100,NONE")]
+        updated_by,
+
+        /// <summary>更新時間</summary>
+        [Description("updated_at,DATETIME,20,NONE")]
+        updated_at
+    }
+
+    /// <summary>
+    /// 專案需求資料類別
+    /// </summary>
+    public class ProjectRequirementClass
+    {
+        [JsonPropertyName("GUID")]
+        public string GUID { get; set; }
+
+        [JsonPropertyName("id")]
+        public string ID { get; set; }
+
+        [JsonPropertyName("project_guid")]
+        public string ProjectGuid { get; set; }
+
+        [JsonPropertyName("project_id")]
+        public string ProjectId { get; set; }
+
+        [JsonPropertyName("procurement_type")]
+        public string ProcurementType { get; set; }
+
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
+
+        [JsonPropertyName("quantity")]
+        public string Quantity { get; set; }
+
+        [JsonPropertyName("unit")]
+        public string Unit { get; set; }
+
+        [JsonPropertyName("status")]
+        public string Status { get; set; }
+
+        [JsonPropertyName("priority")]
+        public string Priority { get; set; }
+
+        [JsonPropertyName("due_date")]
+        public string DueDate { get; set; }
+
+        [JsonPropertyName("requested_date")]
+        public string RequestedDate { get; set; }
+
+        [JsonPropertyName("approved_date")]
+        public string ApprovedDate { get; set; }
+
+        [JsonPropertyName("purchased_date")]
+        public string PurchasedDate { get; set; }
+
+        [JsonPropertyName("delivered_date")]
+        public string DeliveredDate { get; set; }
+
+        [JsonPropertyName("accepted_date")]
+        public string AcceptedDate { get; set; }
+
+        [JsonPropertyName("estimated_cost")]
+        public string EstimatedCost { get; set; }
+
+        [JsonPropertyName("actual_cost")]
+        public string ActualCost { get; set; }
+
+        [JsonPropertyName("approved_budget")]
+        public string ApprovedBudget { get; set; }
+
+        [JsonPropertyName("item_id")]
+        public string ItemId { get; set; }
+
+        [JsonPropertyName("item_name")]
+        public string ItemName { get; set; }
+
+        [JsonPropertyName("item_code")]
+        public string ItemCode { get; set; }
+
+        [JsonPropertyName("supplier_name")]
+        public string SupplierName { get; set; }
+
+        [JsonPropertyName("bom_guid")]
+        public string BomGuid { get; set; }
+
+        [JsonPropertyName("bom_id")]
+        public string BomId { get; set; }
+
+        [JsonPropertyName("is_from_bom")]
+        public string IsFromBom { get; set; }
+
+        [JsonPropertyName("purchase_order_id")]
+        public string PurchaseOrderId { get; set; }
+
+        [JsonPropertyName("vendor_quote_amount")]
+        public string VendorQuoteAmount { get; set; }
+
+        [JsonPropertyName("negotiated_amount")]
+        public string NegotiatedAmount { get; set; }
+
+        [JsonPropertyName("requester")]
+        public string Requester { get; set; }
+
+        [JsonPropertyName("approver")]
+        public string Approver { get; set; }
+
+        [JsonPropertyName("purchaser")]
+        public string Purchaser { get; set; }
+
+        [JsonPropertyName("specifications")]
+        public string Specifications { get; set; }
+
+        [JsonPropertyName("delivery_address")]
+        public string DeliveryAddress { get; set; }
+
+        [JsonPropertyName("notes")]
+        public string Notes { get; set; }
+
+        [JsonPropertyName("is_active")]
+        public string IsActive { get; set; }
+
+        [JsonPropertyName("created_by")]
+        public string CreatedBy { get; set; }
+
+        [JsonPropertyName("created_at")]
+        public string CreatedAt { get; set; }
+
+        [JsonPropertyName("updated_by")]
+        public string UpdatedBy { get; set; }
+
+        [JsonPropertyName("updated_at")]
+        public string UpdatedAt { get; set; }
+
+        [JsonPropertyName("items")]
+        public List<BomRequirementItemClass> Items { get; set; }
+    }
 
 
+    /// <summary>
+    /// BOM 需求項目欄位枚舉
+    /// </summary>
+    [EnumDescription("bom_requirement_items")]
+    public enum enum_bom_requirement_items
+    {
+        /// <summary>唯一識別碼</summary>
+        [Description("GUID,VARCHAR,50,PRIMARY")]
+        GUID,
 
+        /// <summary>項目編號</summary>
+        [Description("ID,VARCHAR,50,NONE")]
+        ID,
+
+        /// <summary>需求GUID</summary>
+        [Description("requirement_guid,VARCHAR,50,NONE")]
+        RequirementGuid,
+
+        /// <summary>需求編號</summary>
+        [Description("requirement_id,VARCHAR,50,NONE")]
+        RequirementId,
+
+        /// <summary>項目描述</summary>
+        [Description("item_description,TEXT,20,NONE")]
+        ItemDescription,
+
+        /// <summary>料號</summary>
+        [Description("item_code,VARCHAR,50,NONE")]
+        ItemCode,
+
+        /// <summary>數量</summary>
+        [Description("quantity,VARCHAR,50,NONE")]
+        Quantity,
+
+        /// <summary>單位</summary>
+        [Description("unit,VARCHAR,20,NONE")]
+        Unit,
+
+        /// <summary>預估單價</summary>
+        [Description("estimated_unit_cost,VARCHAR,50,NONE")]
+        EstimatedUnitCost,
+
+        /// <summary>預估總價</summary>
+        [Description("estimated_total_cost,VARCHAR,50,NONE")]
+        EstimatedTotalCost,
+
+        /// <summary>實際單價</summary>
+        [Description("actual_unit_cost,VARCHAR,50,NONE")]
+        ActualUnitCost,
+
+        /// <summary>實際總價</summary>
+        [Description("actual_total_cost,VARCHAR,50,NONE")]
+        ActualTotalCost,
+
+        /// <summary>項目狀態</summary>
+        [Description("item_status,VARCHAR,20,NONE")]
+        ItemStatus,
+
+        /// <summary>採購進度</summary>
+        [Description("procurement_progress,VARCHAR,10,NONE")]
+        ProcurementProgress,
+
+        /// <summary>技術規格</summary>
+        [Description("specifications,TEXT,20,NONE")]
+        Specifications,
+
+        /// <summary>技術要求</summary>
+        [Description("technical_requirements,TEXT,20,NONE")]
+        TechnicalRequirements,
+
+        /// <summary>品質標準</summary>
+        [Description("quality_standards,TEXT,20,NONE")]
+        QualityStandards,
+
+        /// <summary>偏好供應商</summary>
+        [Description("preferred_supplier,VARCHAR,200,NONE")]
+        PreferredSupplier,
+
+        /// <summary>供應商料號</summary>
+        [Description("supplier_part_number,VARCHAR,100,NONE")]
+        SupplierPartNumber,
+
+        /// <summary>交期天數</summary>
+        [Description("lead_time_days,VARCHAR,10,NONE")]
+        LeadTimeDays,
+
+        /// <summary>備註</summary>
+        [Description("notes,TEXT,20,NONE")]
+        Notes,
+
+        /// <summary>是否啟用</summary>
+        [Description("is_active,VARCHAR,5,NONE")]
+        IsActive,
+
+        /// <summary>建立者</summary>
+        [Description("created_by,VARCHAR,100,NONE")]
+        CreatedBy,
+
+        /// <summary>建立時間</summary>
+        [Description("created_at,DATETIME,20,NONE")]
+        CreatedAt,
+
+        /// <summary>更新者</summary>
+        [Description("updated_by,VARCHAR,100,NONE")]
+        UpdatedBy,
+
+        /// <summary>更新時間</summary>
+        [Description("updated_at,DATETIME,20,NONE")]
+        UpdatedAt
+    }
+
+    /// <summary>
+    /// BOM 需求項目資料類別
+    /// </summary>
+    public class BomRequirementItemClass
+    {
+        /// <summary>唯一識別碼</summary>
+        [JsonPropertyName("GUID")]
+        public string GUID { get; set; }
+
+        /// <summary>項目編號</summary>
+        [JsonPropertyName("id")]
+        public string ID { get; set; }
+
+        /// <summary>需求GUID</summary>
+        [JsonPropertyName("requirement_guid")]
+        public string RequirementGuid { get; set; }
+
+        /// <summary>需求編號</summary>
+        [JsonPropertyName("requirement_id")]
+        public string RequirementId { get; set; }
+
+        /// <summary>項目描述</summary>
+        [JsonPropertyName("item_description")]
+        public string ItemDescription { get; set; }
+
+        /// <summary>料號</summary>
+        [JsonPropertyName("item_code")]
+        public string ItemCode { get; set; }
+
+        /// <summary>數量</summary>
+        [JsonPropertyName("quantity")]
+        public string Quantity { get; set; }
+
+        /// <summary>單位</summary>
+        [JsonPropertyName("unit")]
+        public string Unit { get; set; }
+
+        /// <summary>預估單價</summary>
+        [JsonPropertyName("estimated_unit_cost")]
+        public string EstimatedUnitCost { get; set; }
+
+        /// <summary>預估總價</summary>
+        [JsonPropertyName("estimated_total_cost")]
+        public string EstimatedTotalCost { get; set; }
+
+        /// <summary>實際單價</summary>
+        [JsonPropertyName("actual_unit_cost")]
+        public string ActualUnitCost { get; set; }
+
+        /// <summary>實際總價</summary>
+        [JsonPropertyName("actual_total_cost")]
+        public string ActualTotalCost { get; set; }
+
+        /// <summary>項目狀態</summary>
+        [JsonPropertyName("item_status")]
+        public string ItemStatus { get; set; }
+
+        /// <summary>採購進度</summary>
+        [JsonPropertyName("procurement_progress")]
+        public string ProcurementProgress { get; set; }
+
+        /// <summary>技術規格</summary>
+        [JsonPropertyName("specifications")]
+        public string Specifications { get; set; }
+
+        /// <summary>技術要求</summary>
+        [JsonPropertyName("technical_requirements")]
+        public string TechnicalRequirements { get; set; }
+
+        /// <summary>品質標準</summary>
+        [JsonPropertyName("quality_standards")]
+        public string QualityStandards { get; set; }
+
+        /// <summary>偏好供應商</summary>
+        [JsonPropertyName("preferred_supplier")]
+        public string PreferredSupplier { get; set; }
+
+        /// <summary>供應商料號</summary>
+        [JsonPropertyName("supplier_part_number")]
+        public string SupplierPartNumber { get; set; }
+
+        /// <summary>交期天數</summary>
+        [JsonPropertyName("lead_time_days")]
+        public string LeadTimeDays { get; set; }
+
+        /// <summary>備註</summary>
+        [JsonPropertyName("notes")]
+        public string Notes { get; set; }
+
+        /// <summary>是否啟用</summary>
+        [JsonPropertyName("is_active")]
+        public string IsActive { get; set; }
+
+        /// <summary>建立者</summary>
+        [JsonPropertyName("created_by")]
+        public string CreatedBy { get; set; }
+
+        /// <summary>建立時間</summary>
+        [JsonPropertyName("created_at")]
+        public string CreatedAt { get; set; }
+
+        /// <summary>更新者</summary>
+        [JsonPropertyName("updated_by")]
+        public string UpdatedBy { get; set; }
+
+        /// <summary>更新時間</summary>
+        [JsonPropertyName("updated_at")]
+        public string UpdatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// 需求狀態歷程紀錄欄位枚舉
+    /// </summary>
+    [EnumDescription("requirement_status_history")]
+    public enum enum_requirement_status_history
+    {
+        /// <summary>唯一識別碼</summary>
+        [Description("GUID,VARCHAR,50,PRIMARY")]
+        GUID,
+
+        /// <summary>需求 GUID</summary>
+        [Description("requirement_guid,VARCHAR,50,NONE")]
+        RequirementGuid,
+
+        /// <summary>前一狀態</summary>
+        [Description("previous_status,VARCHAR,20,NONE")]
+        PreviousStatus,
+
+        /// <summary>新狀態</summary>
+        [Description("new_status,VARCHAR,20,NONE")]
+        NewStatus,
+
+        /// <summary>變更原因</summary>
+        [Description("change_reason,TEXT,20,NONE")]
+        ChangeReason,
+
+        /// <summary>變更人</summary>
+        [Description("changed_by,VARCHAR,100,NONE")]
+        ChangedBy,
+
+        /// <summary>變更時間</summary>
+        [Description("changed_at,DATETIME,20,NONE")]
+        ChangedAt,
+
+        /// <summary>變更備註</summary>
+        [Description("notes,TEXT,20,NONE")]
+        Notes
+    }
+
+    /// <summary>
+    /// 需求狀態歷程紀錄資料類別
+    /// </summary>
+    public class RequirementStatusHistoryClass
+    {
+        /// <summary>唯一識別碼</summary>
+        [JsonPropertyName("GUID")]
+        public string GUID { get; set; }
+
+        /// <summary>需求 GUID</summary>
+        [JsonPropertyName("requirement_guid")]
+        public string RequirementGuid { get; set; }
+
+        /// <summary>前一狀態</summary>
+        [JsonPropertyName("previous_status")]
+        public string PreviousStatus { get; set; }
+
+        /// <summary>新狀態</summary>
+        [JsonPropertyName("new_status")]
+        public string NewStatus { get; set; }
+
+        /// <summary>變更原因</summary>
+        [JsonPropertyName("change_reason")]
+        public string ChangeReason { get; set; }
+
+        /// <summary>變更人</summary>
+        [JsonPropertyName("changed_by")]
+        public string ChangedBy { get; set; }
+
+        /// <summary>變更時間</summary>
+        [JsonPropertyName("changed_at")]
+        public string ChangedAt { get; set; }
+
+        /// <summary>變更備註</summary>
+        [JsonPropertyName("notes")]
+        public string Notes { get; set; }
+    }
 
 }

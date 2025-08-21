@@ -22,6 +22,7 @@ namespace HsonWebAPI
     [ApiController]
     public class projects : ControllerBase
     {
+ 
         static private MySqlSslMode SSLMode = MySqlSslMode.None;
 
         [HttpPost("init")]
@@ -1158,8 +1159,6 @@ WHERE 專案GUID = '{Esc(guid)}' AND BOMGUID = '{Esc(g)}' LIMIT 1";
                 return returnData.JsonSerializationt(true);
             }
         }
-
-
         /// <summary>
         /// 刪除專案（軟刪除：將是否啟用設為 0；僅 POST）
         /// </summary>
@@ -1908,7 +1907,2060 @@ WHERE 專案GUID = '{Esc(guid)}' AND BOMGUID = '{Esc(g)}' LIMIT 1";
             }
         }
 
+        /// <summary>
+        /// 獲取專案需求清單（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// **用途：**  
+        /// 依據指定的 `projectGuid` 與篩選條件，獲取專案需求清單，支援分頁、排序與多條件查詢。  
+        ///
+        /// **必填檢核：**  
+        /// - `ValueAry` 必須包含 `projectGuid`  
+        ///
+        /// **Request JSON 範例：**
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "ValueAry": [
+        ///     "projectGuid=550E8400-E29B-41D4-A716-446655440000",
+        ///     "status=採購中",
+        ///     "priority=高",
+        ///     "page=1",
+        ///     "pageSize=50",
+        ///     "sortBy=dueDate",
+        ///     "sortOrder=asc"
+        ///   ]
+        /// }
+        /// ```
+        ///
+        /// **Response JSON 範例：**
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "880F9700-F59E-74G7-D049-779988773333",
+        ///       "ID": "REQ001",
+        ///       "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "projectId": "PRJ001",
+        ///       "procurementType": "市構件請購",
+        ///       "description": "交通號誌控制器",
+        ///       "quantity": "50",
+        ///       "unit": "台",
+        ///       "status": "採購中",
+        ///       "priority": "高",
+        ///       "dueDate": "2024-04-30",
+        ///       "requestedDate": "2024-03-15",
+        ///       "approvedDate": "2024-03-16",
+        ///       "purchasedDate": "2024-03-20",
+        ///       "createdAt": "2024-03-15 09:00:00",
+        ///       "updatedAt": "2024-03-20 14:30:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "get_project_requirements",
+        ///   "Result": "獲取專案需求清單成功",
+        ///   "TimeTaken": "0.125s",
+        ///   "TotalCount": "25",
+        ///   "TotalPages": "1",
+        ///   "CurrentPage": "1",
+        ///   "PageSize": "50"
+        /// }
+        /// ```
+        /// </remarks>
+        /// <param name="returnData">標準請求物件</param>
+        /// <returns>回傳 JSON 格式的查詢結果</returns>
+        [HttpPost("get_project_requirements")]
+        public string GetProjectRequirements([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "get_project_requirements";
 
+            try
+            {
+                // 驗證必填
+                if (returnData.ValueAry == null || returnData.ValueAry.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "ValueAry 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 解析參數
+                string GetVal(string key) =>
+                    returnData.ValueAry.FirstOrDefault(x => x.StartsWith($"{key}=", StringComparison.OrdinalIgnoreCase))
+                    ?.Split('=')[1];
+
+                string projectGuid = GetVal("projectGuid") ?? "";
+                if (projectGuid.StringIsEmpty())
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "缺少必要參數：projectGuid";
+                    return returnData.JsonSerializationt();
+                }
+
+                string procurementType = GetVal("procurementType") ?? "";
+                string status = GetVal("status") ?? "";
+                string priority = GetVal("priority") ?? "";
+                string requester = GetVal("requester") ?? "";
+                string isFromBom = GetVal("isFromBom") ?? "";
+                bool includeItems = (GetVal("includeItems") ?? "false").ToLower() == "true";
+
+                int page = (GetVal("page") ?? "1").StringToInt32();
+                int pageSize = (GetVal("pageSize") ?? "50").StringToInt32();
+                string sortBy = GetVal("sortBy") ?? "更新時間";
+                string sortOrder = (GetVal("sortOrder") ?? "desc").ToUpper();
+
+                if (page < 1) page = 1;
+                if (pageSize < 1) pageSize = 50;
+
+                // 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string table = new enum_project_requirements().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), MySql.Data.MySqlClient.MySqlSslMode.None);
+
+                string Esc(string s) => (s ?? "").Replace("'", "''");
+
+                // 組 WHERE 條件
+                string where = $" WHERE 專案GUID = '{Esc(projectGuid)}' ";
+                if (!procurementType.StringIsEmpty()) where += $" AND procurement_type = '{Esc(procurementType)}' ";
+                if (!status.StringIsEmpty()) where += $" AND status = '{Esc(status)}' ";
+                if (!priority.StringIsEmpty()) where += $" AND priority = '{Esc(priority)}' ";
+                if (!requester.StringIsEmpty()) where += $" AND requester = '{Esc(requester)}' ";
+                if (!isFromBom.StringIsEmpty()) where += $" AND is_from_bom = '{Esc(isFromBom)}' ";
+
+                string orderBy = $" ORDER BY {sortBy} {sortOrder} ";
+                int offset = (page - 1) * pageSize;
+
+                // 查詢總數
+                string countSql = $"SELECT COUNT(*) AS cnt FROM {conf.DBName}.{table} {where}";
+                var dtCnt = sql.WtrteCommandAndExecuteReader(countSql);
+                int totalCount = dtCnt.Rows[0]["cnt"].ToString().StringToInt32();
+                int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                // 查詢資料
+                string querySql = $@"
+                    SELECT * FROM {conf.DBName}.{table}
+                    {where}
+                    {orderBy}
+                    LIMIT {offset}, {pageSize}";
+                var dt = sql.WtrteCommandAndExecuteReader(querySql);
+
+                var requirements = dt.DataTableToRowList().SQLToClass<ProjectRequirementClass, enum_project_requirements>() ?? new List<ProjectRequirementClass>();
+
+                returnData.Code = 200;
+                returnData.Result = "獲取專案需求清單成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = requirements;
+                returnData.AddExtra("TotalCount", totalCount.ToString());
+                returnData.AddExtra("TotalPages", totalPages.ToString());
+                returnData.AddExtra("CurrentPage", page.ToString());
+                returnData.AddExtra("PageSize", pageSize.ToString());
+ 
+
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt();
+            }
+        }
+        /// <summary>
+        /// 取得單一需求詳細資訊（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// **用途：**  
+        /// 依照 <c>GUID</c> 取得專案需求的完整詳細資訊。  
+        /// 可選擇是否包含 BOM 項目資料。  
+        ///
+        /// <b>請求驗證：</b>  
+        /// - <c>ValueAry</c> 必須包含 <c>GUID</c>（大寫）  
+        /// - 缺少必要參數會直接回傳錯誤  
+        ///
+        /// **Request JSON 範例：**
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "ValueAry": [
+        ///     "GUID=880F9700-F59E-74G7-D049-779988773333",
+        ///     "includeItems=true"
+        ///   ]
+        /// }
+        /// ```
+        ///
+        /// **Response JSON 範例（成功）：**
+        /// ```json
+        /// {
+        ///   "Data": {
+        ///     "GUID": "880F9700-F59E-74G7-D049-779988773333",
+        ///     "ID": "REQ001",
+        ///     "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///     "projectId": "PRJ001",
+        ///     "procurementType": "市構件請購",
+        ///     "description": "交通號誌控制器",
+        ///     "quantity": "50",
+        ///     "unit": "台",
+        ///     "status": "採購中",
+        ///     "priority": "高",
+        ///     "dueDate": "2024-04-30",
+        ///     "estimatedCost": "2500000",
+        ///     "itemId": "PROD001",
+        ///     "itemName": "智慧交通控制器 TC-2000",
+        ///     "itemCode": "TC-2000",
+        ///     "supplierName": "智慧科技有限公司",
+        ///     "requester": "張工程師",
+        ///     "approver": "李主管",
+        ///     "purchaser": "王採購",
+        ///     "notes": "緊急需求，需優先處理",
+        ///     "specifications": "需支援 LED 顯示，具備遠端監控功能",
+        ///     "deliveryAddress": "台北市信義區市府路1號",
+        ///     "isActive": "1",
+        ///     "createdBy": "張工程師",
+        ///     "createdAt": "2024-03-15 09:00:00",
+        ///     "updatedBy": "王採購",
+        ///     "updatedAt": "2024-03-20 14:30:00",
+        ///     "items": [
+        ///       {
+        ///         "GUID": "CC0F9B00-F99I-B8K1-H483-BB3322BB7777",
+        ///         "requirementGuid": "880F9700-F59E-74G7-D049-779988773333",
+        ///         "itemDescription": "ARM Cortex-M4 微控制器",
+        ///         "itemCode": "MCU-001",
+        ///         "quantity": "1",
+        ///         "unit": "個",
+        ///         "estimatedUnitCost": "850",
+        ///         "estimatedTotalCost": "850"
+        ///       }
+        ///     ]
+        ///   },
+        ///   "Code": 200,
+        ///   "Method": "get_requirement_details",
+        ///   "Result": "取得需求詳情成功",
+        ///   "TimeTaken": "15.3ms"
+        /// }
+        /// ```
+        ///
+        /// **Response JSON 範例（錯誤）：**
+        /// ```json
+        /// {
+        ///   "Data": null,
+        ///   "Code": -200,
+        ///   "Method": "get_requirement_details",
+        ///   "Result": "缺少 GUID 參數",
+        ///   "TimeTaken": "0.7ms"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("get_requirement_details")]
+        public string get_requirement_details([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "get_requirement_details";
+
+            try
+            {
+                // 1) 驗證必填參數
+                string guid = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("GUID=", StringComparison.OrdinalIgnoreCase))?.Split('=')[1];
+                bool includeItems = ((returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("includeItems=", StringComparison.OrdinalIgnoreCase))?.Split('=')[1]) ?? "false").ToLower() == "true";
+
+                if (guid.StringIsEmpty())
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "缺少 GUID 參數";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 2) 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string reqTable = new enum_project_requirements().GetEnumDescription();
+                string bomItemsTable = new enum_bom_requirement_items().GetEnumDescription();
+
+                var sqlReq = new SQLControl(conf.Server, conf.DBName, reqTable, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+                var sqlBomItems = new SQLControl(conf.Server, conf.DBName, bomItemsTable, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                string Esc(string s) => (s ?? "").Replace("'", "''");
+
+                // 3) 查詢需求主檔
+                string sql = $@"SELECT * FROM {conf.DBName}.{reqTable} WHERE GUID = '{Esc(guid)}' LIMIT 1";
+                var dt = sqlReq.WtrteCommandAndExecuteReader(sql);
+                if (dt.Rows.Count == 0)
+                {
+                    returnData.Code = 404;
+                    returnData.Result = $"查無 GUID={guid} 的需求資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                var requirement = dt.DataTableToRowList().SQLToClass<ProjectRequirementClass, enum_project_requirements>()[0];
+
+                // 4) 是否查詢 BOM 項目
+                if (includeItems)
+                {
+                    string sqlItems = $@"SELECT * FROM {conf.DBName}.{bomItemsTable} WHERE RequirementGuid = '{Esc(guid)}'";
+                    var dtItems = sqlBomItems.WtrteCommandAndExecuteReader(sqlItems);
+                    var items = dtItems.DataTableToRowList().SQLToClass<BomRequirementItemClass, enum_bom_requirement_items>() ?? new List<BomRequirementItemClass>();
+                    requirement.Items = items;
+                }
+
+                // 5) 正常回傳
+                returnData.Code = 200;
+                returnData.Result = "取得需求詳情成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = requirement;
+
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// <summary>
+        /// 建立新的專案需求（僅 POST；欄位皆為 string；GUID 一律大寫）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 建立一筆或多筆「專案需求」資料，並自動產生 <c>GUID</c>（大寫）、建立/更新時間。<br/>
+        /// 系統會套用必填檢核與業務邏輯驗證。<br/><br/>
+        /// 
+        /// <b>必填檢核：</b>
+        /// - `projectGuid` 必填（必須為大寫 GUID）<br/>
+        /// - `description` 必填<br/>
+        /// - `quantity` 必填，且必須大於 0<br/>
+        /// - `unit` 必填<br/><br/>
+        /// 
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": [
+        ///     {
+        ///       "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "projectId": "PRJ001",
+        ///       "procurementType": "市構件請購",
+        ///       "description": "交通號誌控制器",
+        ///       "quantity": "50",
+        ///       "unit": "台",
+        ///       "priority": "高",
+        ///       "dueDate": "2024-04-30",
+        ///       "estimatedCost": "2500000",
+        ///       "itemId": "PROD001",
+        ///       "itemName": "智慧交通控制器 TC-2000",
+        ///       "itemCode": "TC-2000",
+        ///       "supplierName": "智慧科技有限公司",
+        ///       "requester": "張工程師",
+        ///       "specifications": "需支援 LED 顯示，具備遠端監控功能",
+        ///       "deliveryAddress": "台北市信義區市府路1號",
+        ///       "notes": "緊急需求，需優先處理",
+        ///       "createdBy": "張工程師"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        /// 
+        /// <b>Response JSON 範例（成功）：</b>
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "880F9700-F59E-74G7-D049-779988773333",
+        ///       "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "description": "交通號誌控制器",
+        ///       "quantity": "50",
+        ///       "unit": "台",
+        ///       "status": "等待確認請購",
+        ///       "createdAt": "2024-03-15 09:00:00",
+        ///       "updatedAt": "2024-03-15 09:00:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "create_requirement",
+        ///   "Result": "建立專案需求成功",
+        ///   "TimeTaken": "0.035s"
+        /// }
+        /// ```
+        /// 
+        /// <b>Response JSON 範例（失敗）：</b>
+        /// ```json
+        /// {
+        ///   "Data": null,
+        ///   "Code": 400,
+        ///   "Method": "create_requirement",
+        ///   "Result": "參數驗證失敗：projectGuid 為必填",
+        ///   "TimeTaken": "0.012s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("create_requirement")]
+        public string create_requirement([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "create_requirement";
+
+            try
+            {
+                // === 1. 基本檢核 ===
+                if (returnData.Data == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                List<ProjectRequirementClass> input = returnData.Data.ObjToClass<List<ProjectRequirementClass>>();
+                if (input == null || input.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 格式錯誤或無有效資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                // === 2. 伺服器設定 ===
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string tableName = new enum_project_requirements().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, tableName,
+                                         conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                var output = new List<ProjectRequirementClass>();
+
+                // === 3. 寫入流程 ===
+                foreach (var req in input)
+                {
+                    // 檢核必填
+                    if (req.ProjectGuid.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "參數驗證失敗：projectGuid 為必填";
+                        return returnData.JsonSerializationt();
+                    }
+                    if (req.Description.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "參數驗證失敗：description 為必填";
+                        return returnData.JsonSerializationt();
+                    }
+                    if (req.Quantity.StringIsEmpty() || req.Quantity.StringToInt32() <= 0)
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "參數驗證失敗：quantity 必須大於 0";
+                        return returnData.JsonSerializationt();
+                    }
+                    if (req.Unit.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "參數驗證失敗：unit 為必填";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    // GUID處理
+                    string newGuid = string.IsNullOrWhiteSpace(req.GUID) ? Guid.NewGuid().ToString().ToUpper() : req.GUID.ToUpper();
+
+                    string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    var row = new object[Enum.GetValues(typeof(enum_project_requirements)).Length];
+                    row[(int)enum_project_requirements.GUID] = newGuid;
+                    row[(int)enum_project_requirements.project_guid] = req.ProjectGuid.ToUpper();
+                    row[(int)enum_project_requirements.project_id] = req.ProjectId ?? "";
+                    row[(int)enum_project_requirements.procurement_type] = req.ProcurementType ?? "";
+                    row[(int)enum_project_requirements.description] = req.Description ?? "";
+                    row[(int)enum_project_requirements.quantity] = req.Quantity ?? "0";
+                    row[(int)enum_project_requirements.unit] = req.Unit ?? "";
+                    row[(int)enum_project_requirements.priority] = req.Priority ?? "";
+                    row[(int)enum_project_requirements.due_date] = req.DueDate ?? "";
+                    row[(int)enum_project_requirements.estimated_cost] = req.EstimatedCost ?? "";
+                    row[(int)enum_project_requirements.item_id] = req.ItemId ?? "";
+                    row[(int)enum_project_requirements.item_name] = req.ItemName ?? "";
+                    row[(int)enum_project_requirements.item_code] = req.ItemCode ?? "";
+                    row[(int)enum_project_requirements.supplier_name] = req.SupplierName ?? "";
+                    row[(int)enum_project_requirements.requester] = req.Requester ?? "";
+                    row[(int)enum_project_requirements.specifications] = req.Specifications ?? "";
+                    row[(int)enum_project_requirements.delivery_address] = req.DeliveryAddress ?? "";
+                    row[(int)enum_project_requirements.notes] = req.Notes ?? "";
+                    row[(int)enum_project_requirements.status] = "等待確認請購";
+                    row[(int)enum_project_requirements.created_by] = req.CreatedBy ?? "";
+                    row[(int)enum_project_requirements.created_at] = now;
+                    row[(int)enum_project_requirements.updated_by] = req.CreatedBy ?? "";
+                    row[(int)enum_project_requirements.updated_at] = now;
+
+                    sql.AddRow(null, row);
+
+                    req.GUID = newGuid;
+                    req.Status = "等待確認請購";
+                    req.CreatedAt = now;
+                    req.UpdatedAt = now;
+                    output.Add(req);
+                }
+
+                // === 4. 成功回傳 ===
+                returnData.Code = 200;
+                returnData.Result = "建立專案需求成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = output;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt();
+            }
+        }
+        /// <summary>
+        /// 更新專案需求（僅 POST；以 GUID 定位；僅更新傳入欄位）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 依 <c>GUID</c> 更新單筆或多筆需求欄位；未提供之欄位不變。<br/>
+        /// 系統會自動套用日期業務規則並更新 <c>updatedAt</c>。
+        /// <br/><br/>
+        /// <b>必填檢核：</b>
+        /// - <c>Data</c> 不可為空  <br/>
+        /// - 每筆必須提供 <c>GUID</c>（大寫）
+        ///
+        /// <br/><br/>
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "status": "採購中",
+        ///       "priority": "高",
+        ///       "updatedBy": "王採購"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        ///
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "status": "採購中",
+        ///       "priority": "高",
+        ///       "updatedBy": "王採購",
+        ///       "updatedAt": "2025-08-22 12:30:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "update_requirement",
+        ///   "Result": "需求更新成功",
+        ///   "TimeTaken": "0.035s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("update_requirement")]
+        public string update_requirement([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "update_requirement";
+
+            try
+            {
+                // ========== 檢查 Data ==========
+                if (returnData.Data == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "Data 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                List<ProjectRequirementClass> input = returnData.Data.ObjToClass<List<ProjectRequirementClass>>();
+                if (input == null || input.Count == 0)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "Data 格式錯誤或無有效資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                // ========== DB 連線設定 ==========
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string table = new enum_project_requirements().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                string Now() => DateTime.Now.ToDateTimeString();
+                var updatedList = new List<ProjectRequirementClass>();
+                var messages = new List<string>();
+
+                foreach (var req in input)
+                {
+                    if (req.GUID.StringIsEmpty())
+                    {
+                        returnData.Code = -200;
+                        returnData.Result = "每筆需求必須提供 GUID";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    // 依 GUID 找資料
+                    var rows = sql.GetRowsByDefult(null, (int)enum_project_requirements.GUID, req.GUID);
+                    if (rows == null || rows.Count == 0)
+                    {
+                        messages.Add($"查無需求 GUID={req.GUID}");
+                        continue;
+                    }
+
+                    var row = rows[0];
+                    bool updated = false;
+
+                    // 更新欄位（僅更新有傳入的欄位）
+                    foreach (var prop in typeof(ProjectRequirementClass).GetProperties())
+                    {
+                        string colName = prop.Name;
+                        string newVal = prop.GetValue(req)?.ToString();
+
+                        if (!newVal.StringIsEmpty())
+                        {
+                            var enumIdx = Enum.GetNames(typeof(enum_project_requirements)).ToList().IndexOf(colName);
+                            if (enumIdx >= 0)
+                            {
+                                row[enumIdx] = newVal;
+                                updated = true;
+                            }
+                        }
+                    }
+
+                    // 更新 updatedAt
+                    row[(int)enum_project_requirements.updated_at] = Now();
+                    sql.UpdateByDefulteExtra(null, row);
+
+                    req.UpdatedAt = row[(int)enum_project_requirements.updated_at].ObjectToString();
+                    updatedList.Add(req);
+                    messages.Add($"更新需求 GUID={req.GUID}");
+                }
+
+                returnData.Code = 200;
+                returnData.Result = string.Join("；", messages);
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = updatedList;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// <summary>
+        /// 刪除專案需求（僅 POST；以 GUID 定位；支持多筆刪除）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 依 <c>GUID</c> 刪除一筆或多筆專案需求資料。<br/>
+        /// 系統會同時移除關聯 BOM 對應與需求項目，確保資料一致性。<br/><br/>
+        ///
+        /// <b>必填檢核：</b><br/>
+        /// - `Data` 不可為空 <br/>
+        /// - 每筆必須提供 `GUID`（大寫）<br/><br/>
+        ///
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "880F9700-F59E-74G7-D049-779988773333"
+        ///     },
+        ///     {
+        ///       "GUID": "990F9800-F69F-85H8-E150-880099884444"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        ///
+        /// <b>Response JSON 範例 (成功)：</b>
+        /// ```json
+        /// {
+        ///   "Data": null,
+        ///   "Code": 200,
+        ///   "Method": "delete_requirement",
+        ///   "Result": "刪除成功：2 筆",
+        ///   "TimeTaken": "0.032s"
+        /// }
+        /// ```
+        ///
+        /// <b>Response JSON 範例 (錯誤)：</b>
+        /// ```json
+        /// {
+        ///   "Data": null,
+        ///   "Code": 400,
+        ///   "Method": "delete_requirement",
+        ///   "Result": "參數驗證失敗：缺少 GUID",
+        ///   "TimeTaken": "0.015s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("delete_requirement")]
+        public string delete_requirement([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "delete_requirement";
+
+            try
+            {
+                // 1) 請求驗證
+                if (returnData.Data == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                var inputList = returnData.Data.ObjToClass<List<ProjectRequirementClass>>();
+                if (inputList == null || inputList.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 格式錯誤或無有效資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                if (inputList.Any(x => x.GUID.StringIsEmpty()))
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "參數驗證失敗：缺少 GUID";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 2) 取得資料庫設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 500;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string requirementTable = new enum_project_requirements().GetEnumDescription();
+                var sqlReq = new SQLControl(conf.Server, conf.DBName, requirementTable,
+                                            conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                var messages = new List<string>();
+                int successCount = 0;
+
+                // 3) 刪除流程
+                foreach (var req in inputList)
+                {
+                    var rows = sqlReq.GetRowsByDefult(null, (int)enum_project_requirements.GUID, req.GUID);
+                    if (rows.Count > 0)
+                    {
+                        sqlReq.DeleteExtra(null, rows[0]);
+                        successCount++;
+                        messages.Add($"已刪除需求 GUID={req.GUID}");
+                    }
+                    else
+                    {
+                        messages.Add($"找不到需求 GUID={req.GUID}");
+                    }
+                }
+
+                returnData.Code = 200;
+                returnData.Result = $"刪除成功：{successCount} 筆；{string.Join("；", messages)}";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = null;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = $"伺服器錯誤：{ex.Message}";
+                returnData.JsonSerializationt(true);
+            }
+            return returnData.JsonSerializationt();
+        }
+        /// <summary>
+        /// 確認請購（僅 POST；以 GUID 定位；狀態需符合「等待確認請購」才能操作）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 依 <c>GUID</c> 更新專案需求，套用「確認請購」的業務邏輯（狀態流轉）。<br/>
+        /// 
+        /// <b>必填檢核：</b>
+        /// - <c>Data</c> 不可為空  
+        /// - 每筆必須提供 <c>GUID</c>（大寫）  
+        /// - <c>approver</c> 必填  
+        /// - <c>approvedBudget</c> 必填  
+        /// 
+        /// <b>Request JSON 範例：</b><br/>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "880F9700-F59E-74G7-D049-779988773333",
+        ///       "approver": "李主管",
+        ///       "approvedBudget": "2500000",
+        ///       "approvalNotes": "預算核准，可進行採購",
+        ///       "requestedDate": "2024-03-15",
+        ///       "expectedPurchaseDate": "2024-03-20",
+        ///       "updatedBy": "李主管"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        /// 
+        /// <b>Response JSON 範例：</b><br/>
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "880F9700-F59E-74G7-D049-779988773333",
+        ///       "status": "請購中",
+        ///       "approver": "李主管",
+        ///       "approvedBudget": "2500000",
+        ///       "approvalNotes": "預算核准，可進行採購",
+        ///       "requestedDate": "2024-03-15",
+        ///       "expectedPurchaseDate": "2024-03-20",
+        ///       "updatedBy": "李主管",
+        ///       "updatedAt": "2024-03-15 10:05:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "confirm_procurement",
+        ///   "Result": "確認請購成功",
+        ///   "TimeTaken": "0.085s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("confirm_procurement")]
+        public string ConfirmProcurement([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "confirm_procurement";
+
+            try
+            {
+                // 1) 驗證請求
+                if (returnData.Data == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                List<ProjectRequirementClass> input = returnData.Data.ObjToClass<List<ProjectRequirementClass>>();
+                if (input == null || input.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 格式錯誤或無有效資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                var output = new List<ProjectRequirementClass>();
+                var messages = new List<string>();
+
+                // 2) 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string requirementsTable = new enum_project_requirements().GetEnumDescription();
+                var sqlReq = new SQLControl(conf.Server, conf.DBName, requirementsTable, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                // 3) 執行更新
+                foreach (var req in input)
+                {
+                    if (req.GUID.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "每筆需求必須提供 GUID";
+                        return returnData.JsonSerializationt();
+                    }
+                    if (req.Approver.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "approver 為必填";
+                        return returnData.JsonSerializationt();
+                    }
+                    if (req.ApprovedBudget.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "approvedBudget 為必填";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    // 查詢需求
+                    var existed = sqlReq.GetRowsByDefult(null, (int)enum_project_requirements.GUID, req.GUID);
+                    if (existed.Count == 0)
+                    {
+                        returnData.Code = 404;
+                        returnData.Result = $"找不到需求：{req.GUID}";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    var row = existed[0];
+                    string currentStatus = row[(int)enum_project_requirements.status].ObjectToString();
+
+                    if (currentStatus != "等待確認請購")
+                    {
+                        returnData.Code = -1;
+                        returnData.Result = $"需求 {req.GUID} 狀態為「{currentStatus}」，不可確認請購";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    // 更新狀態與欄位
+                    row[(int)enum_project_requirements.status] = "請購中";
+                    row[(int)enum_project_requirements.approver] = req.AcceptedDate ?? "";
+                    row[(int)enum_project_requirements.approved_budget] = req.ApprovedBudget ?? "";
+                    row[(int)enum_project_requirements.notes] = req.Notes ?? "";
+                    row[(int)enum_project_requirements.requested_date] = req.RequestedDate ?? DateTime.Now.ToDateTimeString();
+                    row[(int)enum_project_requirements.updated_by] = req.UpdatedBy ?? req.Approver;
+                    row[(int)enum_project_requirements.updated_at] = DateTime.Now.ToDateTimeString();
+
+                    sqlReq.UpdateByDefulteExtra(null, row);
+
+                    req.Status = "請購中";
+                    req.UpdatedAt = row[(int)enum_project_requirements.updated_at].ObjectToString();
+                    output.Add(req);
+                    messages.Add($"需求 {req.GUID} 已確認請購");
+                }
+
+                // 4) 回傳
+                returnData.Code = 200;
+                returnData.Result = string.Join("；", messages);
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = output;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// <summary>
+        /// 確認採購（僅 POST；依 GUID 更新需求資料，套用狀態流程規則）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 根據 <c>GUID</c> 確認需求進入「採購確認」階段，更新相關採購資訊。<br/>
+        /// 僅允許狀態為「請購中」的需求進入「採購中」。<br/>
+        /// 
+        /// <b>必填檢核：</b>
+        /// - <c>Data</c> 不可為空  
+        /// - 每筆必須提供 <c>GUID</c>（大寫）與 <c>purchaser</c>（採購人）  
+        /// 
+        /// <br/><br/>
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "880F9700-F59E-74G7-D049-779988773333",
+        ///       "purchaser": "王採購",
+        ///       "purchaseOrderId": "PO001",
+        ///       "vendorQuoteAmount": "2450000",
+        ///       "negotiatedAmount": "2400000",
+        ///       "purchasedDate": "2024-03-20",
+        ///       "expectedDeliveryDate": "2024-04-15",
+        ///       "purchaseNotes": "已與供應商確認交期",
+        ///       "updatedBy": "王採購"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        ///
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "880F9700-F59E-74G7-D049-779988773333",
+        ///       "status": "採購中",
+        ///       "purchaser": "王採購",
+        ///       "purchaseOrderId": "PO001",
+        ///       "vendorQuoteAmount": "2450000",
+        ///       "negotiatedAmount": "2400000",
+        ///       "purchasedDate": "2024-03-20",
+        ///       "expectedDeliveryDate": "2024-04-15",
+        ///       "notes": "已與供應商確認交期",
+        ///       "updatedBy": "王採購",
+        ///       "updatedAt": "2024-03-20 14:30:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "confirm_purchase",
+        ///   "Result": "需求採購確認成功",
+        ///   "TimeTaken": "0.125s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("confirm_purchase")]
+        public string confirm_purchase([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "confirm_purchase";
+
+            try
+            {
+                // 驗證請求格式
+                if (returnData.Data == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 反序列化
+                List<ProjectRequirementClass> input = returnData.Data.ObjToClass<List<ProjectRequirementClass>>();
+                if (input == null || input.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 格式錯誤或無有效資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 取得伺服器設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 500;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string table = new enum_project_requirements().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                var updatedList = new List<ProjectRequirementClass>();
+                var messages = new List<string>();
+                string Now() => DateTime.Now.ToDateTimeString();
+
+                foreach (var req in input)
+                {
+                    if (req.GUID.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "GUID 為必填";
+                        return returnData.JsonSerializationt();
+                    }
+                    if (req.Purchaser.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "purchaser 採購人為必填";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    var existed = sql.GetRowsByDefult(null, (int)enum_project_requirements.GUID, req.GUID);
+                    if (existed.Count == 0)
+                    {
+                        returnData.Code = 404;
+                        returnData.Result = $"需求 GUID={req.GUID} 不存在";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    object[] row = existed[0];
+                    string currentStatus = row[(int)enum_project_requirements.status].ObjectToString();
+
+                    if (currentStatus != "請購中")
+                    {
+                        returnData.Code = -1;
+                        returnData.Result = $"需求 GUID={req.GUID} 狀態必須為 '請購中' 才能確認採購，目前狀態：{currentStatus}";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    // 更新需求
+                    row[(int)enum_project_requirements.status] = "採購中";
+                    row[(int)enum_project_requirements.purchaser] = req.Purchaser ?? "";
+                    row[(int)enum_project_requirements.purchase_order_id] = req.PurchaseOrderId ?? "";
+                    row[(int)enum_project_requirements.vendor_quote_amount] = req.VendorQuoteAmount ?? "";
+                    row[(int)enum_project_requirements.negotiated_amount] = req.NegotiatedAmount ?? "";
+                    row[(int)enum_project_requirements.purchased_date] = req.PurchasedDate ?? "";
+                    row[(int)enum_project_requirements.delivered_date] = req.DeliveredDate ?? "";
+                    row[(int)enum_project_requirements.notes] = req.Notes ?? "";
+                    row[(int)enum_project_requirements.updated_by] = req.UpdatedBy ?? "系統";
+                    row[(int)enum_project_requirements.updated_at] = Now();
+
+                    sql.UpdateByDefulteExtra(null, row);
+
+                    req.Status = "採購中";
+                    req.UpdatedAt = Now();
+                    updatedList.Add(req);
+                    messages.Add($"需求 GUID={req.GUID} 已確認採購，更新狀態為 採購中");
+                }
+
+                returnData.Code = 200;
+                returnData.Result = string.Join("；", messages);
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = updatedList;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt(true);
+            }
+        }
+
+
+        /// <summary>
+        /// 將 BOM 轉換為專案採購需求（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 將指定 BOM 轉換為專案需求，並可選擇是否自動建立需求。<br/>
+        /// 僅支援 <c>POST</c> 方法，所有欄位型別均為字串，<c>GUID</c> 必須為大寫。
+        ///
+        /// <br/><br/>
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "ValueAry": [
+        ///     "projectGuid=550E8400-E29B-41D4-A716-446655440000",
+        ///     "bomGuid=660F9500-F39C-52E5-B827-557766551111",
+        ///     "autoCreateRequirement=true",
+        ///     "defaultDueDate=2024-06-30",
+        ///     "defaultPriority=中",
+        ///     "requester=系統自動轉換"
+        ///   ]
+        /// }
+        /// ```
+        ///
+        /// <br/>
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "BB0F9A00-F89H-A7J0-G372-AA2211AA6666",
+        ///       "ID": "REQ_BOM_001",
+        ///       "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "description": "智慧交通控制器主機板 (來自BOM)",
+        ///       "quantity": "1",
+        ///       "unit": "套",
+        ///       "status": "等待確認請購",
+        ///       "priority": "中",
+        ///       "dueDate": "2024-06-30",
+        ///       "estimatedCost": "8500",
+        ///       "isFromBom": "1",
+        ///       "requester": "系統自動轉換",
+        ///       "createdAt": "2024-03-15 14:30:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "convert_bom_to_requirements",
+        ///   "Result": "BOM轉換為採購需求成功"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("convert_bom_to_requirements")]
+        public string ConvertBomToRequirements([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "convert_bom_to_requirements";
+
+            try
+            {
+                // 驗證 ValueAry 是否存在
+                if (returnData.ValueAry == null || returnData.ValueAry.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "參數驗證失敗：ValueAry 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                string GetVal(string key) =>
+                    returnData.ValueAry.FirstOrDefault(x =>
+                        x.StartsWith($"{key}=", StringComparison.OrdinalIgnoreCase))
+                        ?.Split('=')[1] ?? "";
+
+                string projectGuid = GetVal("projectGuid");
+                string bomGuid = GetVal("bomGuid");
+                string autoCreate = GetVal("autoCreateRequirement");
+                string defaultDueDate = GetVal("defaultDueDate");
+                string defaultPriority = GetVal("defaultPriority");
+                string requester = GetVal("requester");
+
+                // 驗證必填欄位
+                if (string.IsNullOrWhiteSpace(projectGuid) || string.IsNullOrWhiteSpace(bomGuid))
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "參數驗證失敗：projectGuid 與 bomGuid 為必填欄位";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 這裡模擬 BOM 轉換 → 需求建立邏輯
+                var output = new List<ProjectRequirementClass>();
+                var req = new ProjectRequirementClass
+                {
+                    GUID = Guid.NewGuid().ToString().ToUpper(),
+                    ProjectGuid = projectGuid.ToUpper(),
+                    BomGuid = bomGuid.ToUpper(),
+                    Description = "智慧交通控制器主機板 (來自BOM)",
+                    Quantity = "1",
+                    Unit = "套",
+                    Status = "等待確認請購",
+                    Priority = string.IsNullOrEmpty(defaultPriority) ? "中" : defaultPriority,
+                    DueDate = string.IsNullOrEmpty(defaultDueDate) ? DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd") : defaultDueDate,
+                    EstimatedCost = "8500",
+                    IsFromBom = "1",
+                    Requester = requester,
+                    CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    UpdatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+                output.Add(req);
+
+                returnData.Code = 200;
+                returnData.Result = "BOM轉換為採購需求成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = output;
+
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = $"伺服器錯誤：{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// <summary>
+        /// 同步 BOM 與採購需求（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// **用途**  
+        /// - 將 BOM 與需求表進行同步，可選擇「全量 / 增量 / 強制」模式。  
+        /// 
+        /// **必填參數**  
+        /// - projectGuid  
+        /// - bomGuid  
+        /// 
+        /// **Request JSON 範例**
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "ValueAry": [
+        ///     "projectGuid=550E8400-E29B-41D4-A716-446655440000",
+        ///     "bomGuid=660F9500-F39C-52E5-B827-557766551111",
+        ///     "syncType=全量同步",
+        ///     "updateExisting=true",
+        ///     "createMissing=true",
+        ///     "removeObsolete=false",
+        ///     "syncBy=張工程師"
+        ///   ]
+        /// }
+        /// ```
+        /// 
+        /// **Response JSON 範例**
+        /// ```json
+        /// {
+        ///   "Data": {
+        ///     "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///     "bomGuid": "660F9500-F39C-52E5-B827-557766551111",
+        ///     "syncType": "全量同步",
+        ///     "updated": "2",
+        ///     "created": "1",
+        ///     "removed": "0",
+        ///     "messages": [
+        ///       "更新需求：REQ001",
+        ///       "建立需求：REQ_BOM_20240822123456"
+        ///     ]
+        ///   },
+        ///   "Code": 200,
+        ///   "Method": "sync_bom_requirements",
+        ///   "Result": "同步完成，共處理 3 筆需求",
+        ///   "TimeTaken": "0.120s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("sync_bom_requirements")]
+        public string sync_bom_requirements([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "sync_bom_requirements";
+
+            try
+            {
+                // ===== 1. 解析參數 =====
+                string GetVal(string key) => returnData.ValueAry?
+                    .FirstOrDefault(x => x.StartsWith($"{key}=", StringComparison.OrdinalIgnoreCase))
+                    ?.Split('=')[1];
+
+                string projectGuid = GetVal("projectGuid") ?? "";
+                string bomGuid = GetVal("bomGuid") ?? "";
+                string syncType = GetVal("syncType") ?? "全量同步";
+                bool updateExisting = (GetVal("updateExisting") ?? "false").ToLower() == "true";
+                bool createMissing = (GetVal("createMissing") ?? "false").ToLower() == "true";
+                bool removeObsolete = (GetVal("removeObsolete") ?? "false").ToLower() == "true";
+                string syncBy = GetVal("syncBy") ?? "";
+
+                if (projectGuid.StringIsEmpty() || bomGuid.StringIsEmpty())
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "缺少必填參數：projectGuid 或 bomGuid";
+                    return returnData.JsonSerializationt();
+                }
+
+                // ===== 2. 取得 DB 設定 =====
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 404;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string bomTable = new enum_project_bom_associations().GetEnumDescription();
+                string reqTable = new enum_project_requirements().GetEnumDescription();
+
+                var sqlBOM = new SQLControl(conf.Server, conf.DBName, bomTable, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+                var sqlReq = new SQLControl(conf.Server, conf.DBName, reqTable, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                // ===== 3. 查詢 BOM 與需求資料 =====
+                var dtBOM = sqlBOM.GetRowsByDefult(null, (int)enum_project_bom_associations.專案GUID, projectGuid);
+                var bomList = dtBOM.SQLToClass<project_bom_associationClass, enum_project_bom_associations>()
+                                   .Where(b => b.專案GUID == projectGuid && b.BOMGUID == bomGuid)
+                                   .ToList();
+
+                var dtReq = sqlReq.GetRowsByDefult(null, (int)enum_project_requirements.project_guid, projectGuid);
+                var reqList = dtReq.SQLToClass<ProjectRequirementClass, enum_project_requirements>()
+                                   .Where(r => r.ProjectGuid == projectGuid && r.BomGuid == bomGuid)
+                                   .ToList();
+
+                var messages = new List<string>();
+                int updated = 0, created = 0, removed = 0;
+
+                // ===== 4. 同步邏輯 =====
+                foreach (var bom in bomList)
+                {
+                    var matched = reqList.FirstOrDefault(r => r.BomId == bom.BOM編號 && r.BomGuid == bom.BOMGUID);
+                    if (matched != null)
+                    {
+                        if (updateExisting)
+                        {
+                            matched.Description = bom.BOM名稱;
+                            matched.Quantity = bom.需求數量;
+                            matched.UpdatedBy = syncBy;
+                            matched.UpdatedAt = DateTime.Now.ToDateTimeString();
+                            sqlReq.UpdateByDefulteExtra(null, matched.ClassToSQL<ProjectRequirementClass, enum_project_requirements>());
+                            messages.Add($"更新需求：{matched.ID ?? matched.ItemCode}");
+                            updated++;
+                        }
+                    }
+                    else
+                    {
+                        if (createMissing)
+                        {
+                            var newReq = new ProjectRequirementClass
+                            {
+                                GUID = Guid.NewGuid().ToString().ToUpper(),
+                                ID = $"REQ_BOM_{DateTime.Now:yyyyMMddHHmmss}",
+                                ProjectGuid = projectGuid,
+                                ProjectId = "", // 可以從 projectClass 帶入
+                                ProcurementType = "研發件請購",
+                                Description = bom.BOM名稱,
+                                Quantity = bom.需求數量,
+                                Unit = "",
+                                Status = "等待確認請購",
+                                Priority = "中",
+                                DueDate = bom.到期日,
+                                BomGuid = bom.BOMGUID,
+                                BomId = bom.BOM編號,
+                                IsFromBom = "1",
+                                CreatedBy = syncBy,
+                                CreatedAt = DateTime.Now.ToDateTimeString(),
+                                UpdatedBy = syncBy,
+                                UpdatedAt = DateTime.Now.ToDateTimeString()
+                            };
+
+                            sqlReq.AddRow(null, newReq.ClassToSQL<ProjectRequirementClass, enum_project_requirements>());
+                            messages.Add($"建立需求：{newReq.ID}");
+                            created++;
+                        }
+                    }
+                }
+
+                if (removeObsolete)
+                {
+                    var obsolete = reqList.Where(r => !bomList.Any(b => b.BOM編號 == r.BomId)).ToList();
+                    foreach (var ob in obsolete)
+                    {
+                        sqlReq.DeleteExtra(null, ob.ClassToSQL<ProjectRequirementClass, enum_project_requirements>());
+                        messages.Add($"刪除過時需求：{ob.ID ?? ob.ItemCode}");
+                        removed++;
+                    }
+                }
+
+                // ===== 5. 回傳結果 =====
+                var result = new
+                {
+                    projectGuid,
+                    bomGuid,
+                    syncType,
+                    updated = updated.ToString(),
+                    created = created.ToString(),
+                    removed = removed.ToString(),
+                    messages
+                };
+
+                returnData.Code = 200;
+                returnData.Result = $"同步完成，共處理 {updated + created + removed} 筆需求";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = result;
+
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// 獲取 BOM 與採購需求對應關係（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 查詢指定專案與 BOM 的採購對應資訊。<br/>
+        /// 
+        /// <b>必填檢核：</b><br/>
+        /// - ValueAry 必須包含 <c>projectGuid</c> 與 <c>bomGuid</c><br/>
+        /// - GUID 一律大寫<br/>
+        /// 
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "ValueAry": [
+        ///     "projectGuid=550E8400-E29B-41D4-A716-446655440000",
+        ///     "bomGuid=660F9500-F39C-52E5-B827-557766551111"
+        ///   ]
+        /// }
+        /// ```
+        /// 
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "DD0F9C00-FA9J-C9L2-I594-CC4433CC8888",
+        ///       "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "bomGuid": "660F9500-F39C-52E5-B827-557766551111",
+        ///       "mappingType": "直接對應",
+        ///       "quantityRatio": "1",
+        ///       "conversionFactor": "1",
+        ///       "mappingStatus": "啟用",
+        ///       "notes": "對應測試",
+        ///       "updatedAt": "2025-08-22 10:30:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "get_bom_procurement_mapping",
+        ///   "Result": "獲取 BOM 採購對應成功",
+        ///   "TimeTaken": "0.125s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("get_bom_procurement_mapping")]
+        public string GetBomProcurementMapping([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "get_bom_procurement_mapping";
+
+            try
+            {
+                // 1) 驗證 ValueAry
+                if (returnData.ValueAry == null || returnData.ValueAry.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "ValueAry 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                string GetVal(string key) =>
+                    returnData.ValueAry.FirstOrDefault(x => x.StartsWith($"{key}=", StringComparison.OrdinalIgnoreCase))
+                    ?.Split('=')[1];
+
+                string projectGuid = GetVal("projectGuid");
+                string bomGuid = GetVal("bomGuid");
+
+                if (string.IsNullOrWhiteSpace(projectGuid) || string.IsNullOrWhiteSpace(bomGuid))
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "缺少必要參數：projectGuid 或 bomGuid";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 2) 確保 GUID 大寫
+                projectGuid = projectGuid.ToUpper();
+                bomGuid = bomGuid.ToUpper();
+
+                // 3) 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 500;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string tableName = new enum_project_bom_associations().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, tableName, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                // 4) 查詢對應資料
+                string Esc(string s) => (s ?? "").Replace("'", "''");
+
+                string query = $@"
+                    SELECT * 
+                    FROM {conf.DBName}.{tableName}
+                    WHERE 專案GUID = '{Esc(projectGuid)}'
+                      AND BOMGUID = '{Esc(bomGuid)}'
+                    ORDER BY 更新時間 DESC";
+
+                var dt = sql.WtrteCommandAndExecuteReader(query);
+                var resultList = dt.DataTableToRowList().SQLToClass<project_bom_associationClass, enum_project_bom_associations>();
+
+                // 5) 回傳
+                returnData.Code = 200;
+                returnData.Result = "獲取 BOM 採購對應成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = resultList;
+
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = $"系統錯誤：{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// <summary>
+        /// 更新 BOM 與採購需求對應關係（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 建立或更新 BOM 與需求的對應關係（Upsert）。<br/>
+        /// - 若 Data 內含 GUID，則嘗試更新；找不到則新增。<br/>
+        /// - 若 Data 無 GUID，系統自動產生 GUID 並新增。<br/>
+        /// 
+        /// <b>必填檢核：</b><br/>
+        /// - Data 不可為空<br/>
+        /// - 每筆必須包含 <c>projectGuid</c> 與 <c>bomGuid</c><br/>
+        /// - GUID 一律大寫<br/>
+        /// 
+        /// <b>Request JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "DD0F9C00-FA9J-C9L2-I594-CC4433CC8888",
+        ///       "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "bomGuid": "660F9500-F39C-52E5-B827-557766551111",
+        ///       "mappingType": "直接對應",
+        ///       "quantityRatio": "1",
+        ///       "conversionFactor": "1",
+        ///       "mappingStatus": "啟用",
+        ///       "notes": "直接對應，無需轉換",
+        ///       "updatedBy": "張工程師"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        /// 
+        /// <b>Response JSON 範例：</b>
+        /// ```json
+        /// {
+        ///   "Data": [
+        ///     {
+        ///       "GUID": "DD0F9C00-FA9J-C9L2-I594-CC4433CC8888",
+        ///       "projectGuid": "550E8400-E29B-41D4-A716-446655440000",
+        ///       "bomGuid": "660F9500-F39C-52E5-B827-557766551111",
+        ///       "mappingType": "直接對應",
+        ///       "quantityRatio": "1",
+        ///       "conversionFactor": "1",
+        ///       "mappingStatus": "啟用",
+        ///       "notes": "直接對應，無需轉換",
+        ///       "updatedBy": "張工程師",
+        ///       "updatedAt": "2025-08-22 15:00:00"
+        ///     }
+        ///   ],
+        ///   "Code": 200,
+        ///   "Method": "update_bom_item_mapping",
+        ///   "Result": "更新 BOM 對應成功",
+        ///   "TimeTaken": "0.145s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("update_bom_item_mapping")]
+        public string UpdateBomItemMapping([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "update_bom_item_mapping";
+
+            try
+            {
+                // 1) 驗證請求
+                if (returnData.Data == null)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                var inputList = returnData.Data.ObjToClass<List<project_bom_associationClass>>();
+                if (inputList == null || inputList.Count == 0)
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "Data 格式錯誤或無有效資料";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 2) 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 500;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string tableName = new enum_project_bom_associations().GetEnumDescription();
+                var sql = new SQLControl(conf.Server, conf.DBName, tableName, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                var resultList = new List<project_bom_associationClass>();
+
+                // 3) Upsert 邏輯
+                foreach (var item in inputList)
+                {
+                    if (item.專案GUID.StringIsEmpty() || item.BOMGUID.StringIsEmpty())
+                    {
+                        returnData.Code = 400;
+                        returnData.Result = "缺少必填欄位：projectGuid 或 bomGuid";
+                        return returnData.JsonSerializationt();
+                    }
+
+                    // 確保 GUID 大寫
+                    item.GUID = (item.GUID.StringIsEmpty() ? Guid.NewGuid().ToString() : item.GUID).ToUpper();
+                    item.專案GUID = item.專案GUID.ToUpper();
+                    item.BOMGUID = item.BOMGUID.ToUpper();
+                    item.更新時間 = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                    // 查詢是否已存在
+                    var existed = sql.GetRowsByDefult(null, (int)enum_project_bom_associations.GUID, item.GUID);
+
+                    if (existed.Count > 0)
+                    {
+                        // 更新
+                        var row = existed[0];
+                        row[(int)enum_project_bom_associations.專案GUID] = item.專案GUID;
+                        row[(int)enum_project_bom_associations.BOMGUID] = item.BOMGUID;
+                        row[(int)enum_project_bom_associations.關聯類型] = item.關聯類型 ?? "";
+                        row[(int)enum_project_bom_associations.需求數量] = item.需求數量 ?? "";
+                        row[(int)enum_project_bom_associations.到期日] = item.到期日 ?? "";
+                        row[(int)enum_project_bom_associations.狀態] = item.狀態 ?? "";
+                        row[(int)enum_project_bom_associations.備註] = item.備註 ?? "";
+                        row[(int)enum_project_bom_associations.更新者] = item.更新者 ?? "";
+                        row[(int)enum_project_bom_associations.更新時間] = item.更新時間;
+                        sql.UpdateByDefulteExtra(null, row);
+                    }
+                    else
+                    {
+                        // 新增
+                        var ins = new object[Enum.GetValues(typeof(enum_project_bom_associations)).Length];
+                        ins[(int)enum_project_bom_associations.GUID] = item.GUID;
+                        ins[(int)enum_project_bom_associations.專案GUID] = item.專案GUID;
+                        ins[(int)enum_project_bom_associations.BOMGUID] = item.BOMGUID;
+                        ins[(int)enum_project_bom_associations.關聯類型] = item.關聯類型 ?? "";
+                        ins[(int)enum_project_bom_associations.需求數量] = item.需求數量 ?? "";
+                        ins[(int)enum_project_bom_associations.到期日] = item.到期日 ?? "";
+                        ins[(int)enum_project_bom_associations.狀態] = item.狀態 ?? "";
+                        ins[(int)enum_project_bom_associations.備註] = item.備註 ?? "";
+                        ins[(int)enum_project_bom_associations.建立者] = item.建立者 ?? "";
+                        ins[(int)enum_project_bom_associations.建立時間] = item.建立時間.StringIsEmpty() ? item.更新時間 : item.建立時間;
+                        ins[(int)enum_project_bom_associations.更新者] = item.更新者 ?? "";
+                        ins[(int)enum_project_bom_associations.更新時間] = item.更新時間;
+                        sql.AddRow(null, ins);
+                    }
+
+                    resultList.Add(item);
+                }
+
+                // 4) 回傳
+                returnData.Code = 200;
+                returnData.Result = "更新 BOM 對應成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = resultList;
+
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = $"系統錯誤：{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
+
+        /// <summary>
+        /// 獲取採購統計資料（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// **用途：**  
+        /// 查詢並統計專案採購需求之整體數據，包括需求數量、狀態分佈、成本統計等。  
+        ///
+        /// **必填檢核：**  
+        /// - `ServerName` 不可為空  
+        /// - `ServerType` 不可為空  
+        ///
+        /// **Request JSON 範例：**
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁"
+        /// }
+        /// ```
+        ///
+        /// **Response JSON 範例：**
+        /// ```json
+        /// {
+        ///   "Data": {
+        ///     "totalRequirements": "25",
+        ///     "pendingConfirmationCount": "5",
+        ///     "inRequisitionCount": "8",
+        ///     "inPurchaseCount": "7",
+        ///     "deliveredCount": "4",
+        ///     "acceptedCount": "1",
+        ///     "totalEstimatedCost": "12500000",
+        ///     "totalActualCost": "11800000",
+        ///     "totalApprovedBudget": "13000000",
+        ///     "budgetUtilizationRate": "90.77",
+        ///     "averageLeadTime": "21.5",
+        ///     "onTimeDeliveryRate": "85.5"
+        ///   },
+        ///   "Code": 200,
+        ///   "Method": "get_procurement_statistics",
+        ///   "Result": "獲取採購統計成功",
+        ///   "TimeTaken": "0.125s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("get_procurement_statistics")]
+        public string get_procurement_statistics([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "get_procurement_statistics";
+
+            try
+            {
+                // ======== 1) 檢核 Request ========
+                if (string.IsNullOrWhiteSpace(returnData.ServerName))
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "參數錯誤：ServerName 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+                if (string.IsNullOrWhiteSpace(returnData.ServerType))
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "參數錯誤：ServerType 不能為空";
+                    return returnData.JsonSerializationt();
+                }
+
+                // ======== 2) 取得 DB 設定 ========
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 404;
+                    returnData.Result = "找不到對應的 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string requirementTable = new enum_project_requirements().GetEnumDescription();
+                var sqlReq = new SQLControl(conf.Server, conf.DBName, requirementTable,
+                                            conf.User, conf.Password, conf.Port.StringToUInt32(),
+                                            MySqlSslMode.None);
+
+                // ======== 3) 讀取資料表 ========
+                var dt = sqlReq.GetAllRows(null);
+                var list = dt.SQLToClass<ProjectRequirementClass, enum_project_requirements>() ?? new List<ProjectRequirementClass>();
+
+                // ======== 4) 統計運算 ========
+                int total = list.Count;
+                int pending = list.Count(x => x.Status == "等待確認請購");
+                int inReq = list.Count(x => x.Status == "請購中");
+                int inPurchase = list.Count(x => x.Status == "採購中");
+                int delivered = list.Count(x => x.Status == "已交貨");
+                int accepted = list.Count(x => x.Status == "已驗收");
+
+                double totalEstimated = list.Sum(x => x.EstimatedCost.StringToDouble());
+                double totalActual = list.Sum(x => x.ActualCost.StringToDouble());
+                double totalBudget = list.Sum(x => x.ApprovedBudget.StringToDouble());
+
+                string budgetRate = (totalBudget > 0) ? ((totalActual / totalBudget) * 100).ToString("0.##") : "0";
+
+                // ======== 5) 回傳格式 ========
+                var stats = new
+                {
+                    totalRequirements = total.ToString(),
+                    pendingConfirmationCount = pending.ToString(),
+                    inRequisitionCount = inReq.ToString(),
+                    inPurchaseCount = inPurchase.ToString(),
+                    deliveredCount = delivered.ToString(),
+                    acceptedCount = accepted.ToString(),
+                    totalEstimatedCost = totalEstimated.ToString(),
+                    totalActualCost = totalActual.ToString(),
+                    totalApprovedBudget = totalBudget.ToString(),
+                    budgetUtilizationRate = budgetRate,
+                    averageLeadTime = "0",       // TODO: 可依需求計算
+                    onTimeDeliveryRate = "0"     // TODO: 可依需求計算
+                };
+
+                returnData.Code = 200;
+                returnData.Result = "獲取採購統計成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = stats;
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = $"系統錯誤：{ex.Message}";
+                return returnData.JsonSerializationt(true);
+            }
+        }
+        /// <summary>
+        /// 獲取專案採購儀表板資料（僅 POST）
+        /// </summary>
+        /// <remarks>
+        /// <b>用途：</b><br/>
+        /// 提供專案採購儀表板所需的即時統計資料，包括需求數量、狀態分佈、類型分佈、月趨勢。<br/><br/>
+        /// 
+        /// <b>必填檢核：</b><br/>
+        /// - `ServerName` 不可為空<br/>
+        /// - `ServerType` 不可為空<br/><br/>
+        /// 
+        /// **Request JSON 範例：**
+        /// ```json
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁"
+        /// }
+        /// ```
+        /// 
+        /// **Response JSON 範例：**
+        /// ```json
+        /// {
+        ///   "Data": {
+        ///     "totalRequirements": "25",
+        ///     "pendingConfirmationCount": "5",
+        ///     "inRequisitionCount": "8",
+        ///     "inPurchaseCount": "7",
+        ///     "deliveredCount": "4",
+        ///     "acceptedCount": "1",
+        ///     "totalEstimatedCost": "12500000",
+        ///     "totalActualCost": "11800000",
+        ///     "totalApprovedBudget": "13000000",
+        ///     "budgetUtilizationRate": "90.77",
+        ///     "averageLeadTime": "21.5",
+        ///     "onTimeDeliveryRate": "85.5",
+        ///     "procurementTypeDistribution": {
+        ///       "市構件請購": "15",
+        ///       "產品請購": "8",
+        ///       "研發件請購": "2"
+        ///     },
+        ///     "statusDistribution": {
+        ///       "等待確認請購": "5",
+        ///       "請購中": "8",
+        ///       "採購中": "7",
+        ///       "已請購": "3",
+        ///       "已交貨": "1",
+        ///       "已驗收": "1"
+        ///     },
+        ///     "monthlyTrend": [
+        ///       {
+        ///         "month": "2024-01",
+        ///         "newRequirements": "8",
+        ///         "completedRequirements": "2",
+        ///         "totalCost": "3200000"
+        ///       }
+        ///     ]
+        ///   },
+        ///   "Code": 200,
+        ///   "Method": "get_procurement_dashboard",
+        ///   "Result": "獲取採購儀表板成功",
+        ///   "TimeTaken": "0.125s"
+        /// }
+        /// ```
+        /// </remarks>
+        [HttpPost("get_procurement_dashboard")]
+        public string get_procurement_dashboard([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "get_procurement_dashboard";
+
+            try
+            {
+                // 1) 請求驗證
+                if (returnData.ServerName.StringIsEmpty() || returnData.ServerType.StringIsEmpty())
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "ServerName 與 ServerType 為必填欄位";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 2) 取得 DB 設定
+                var servers = serverSetting.GetAllServerSetting();
+                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = 404;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                string reqTable = new enum_project_requirements().GetEnumDescription();
+                var sqlReq = new SQLControl(conf.Server, conf.DBName, reqTable, conf.User, conf.Password, conf.Port.StringToUInt32(), MySqlSslMode.None);
+
+                // 3) 查詢需求資料
+                string sql = $@"SELECT * FROM {conf.DBName}.{reqTable}";
+                var dt = sqlReq.WtrteCommandAndExecuteReader(sql);
+                var requirements = dt.DataTableToRowList().SQLToClass<ProjectRequirementClass, enum_project_requirements>() ?? new List<ProjectRequirementClass>();
+
+                // 4) 統計計算
+                var dashboard = new
+                {
+                    totalRequirements = requirements.Count.ToString(),
+                    pendingConfirmationCount = requirements.Count(x => x.Status == "等待確認請購").ToString(),
+                    inRequisitionCount = requirements.Count(x => x.Status == "請購中").ToString(),
+                    inPurchaseCount = requirements.Count(x => x.Status == "採購中").ToString(),
+                    deliveredCount = requirements.Count(x => x.Status == "已交貨").ToString(),
+                    acceptedCount = requirements.Count(x => x.Status == "已驗收").ToString(),
+                    totalEstimatedCost = requirements.Sum(x => x.EstimatedCost.StringToDouble()).ToString("0"),
+                    totalActualCost = requirements.Sum(x => x.ActualCost.StringToDouble()).ToString("0"),
+                    totalApprovedBudget = requirements.Sum(x => x.ApprovedBudget.StringToDouble()).ToString("0"),
+                    budgetUtilizationRate = CalcBudgetUtilization(requirements).ToString("0.##"),
+                    averageLeadTime = CalcAverageLeadTime(requirements).ToString("0.##"),
+                    onTimeDeliveryRate = CalcOnTimeDeliveryRate(requirements).ToString("0.##"),
+                    procurementTypeDistribution = requirements.GroupBy(r => r.ProcurementType ?? "")
+                        .ToDictionary(g => g.Key, g => g.Count().ToString()),
+                    statusDistribution = requirements.GroupBy(r => r.Status ?? "")
+                        .ToDictionary(g => g.Key, g => g.Count().ToString()),
+                    monthlyTrend = requirements
+                        .GroupBy(r => r.CreatedAt.StringToDateTime().ToString("yyyy-MM"))
+                        .Select(g => new {
+                            month = g.Key,
+                            newRequirements = g.Count().ToString(),
+                            completedRequirements = g.Count(r => r.Status == "已驗收" || r.Status == "已交貨").ToString(),
+                            totalCost = g.Sum(r => r.EstimatedCost.StringToDouble()).ToString("0")
+                        }).OrderBy(x => x.month).ToList()
+                };
+
+                // 5) 回傳成功
+                returnData.Code = 200;
+                returnData.Result = "獲取採購儀表板成功";
+                returnData.TimeTaken = $"{timer}";
+                returnData.Data = dashboard;
+
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = 500;
+                returnData.Result = ex.Message;
+                return returnData.JsonSerializationt(true);
+            }
+        }
+
+        #region Helper Methods
+        private double CalcBudgetUtilization(List<ProjectRequirementClass> reqs)
+        {
+            double totalBudget = reqs.Sum(r => r.ApprovedBudget.StringToDouble());
+            double totalActual = reqs.Sum(r => r.ActualCost.StringToDouble());
+            return totalBudget > 0 ? (totalActual / totalBudget) * 100 : 0;
+        }
+
+        private double CalcAverageLeadTime(List<ProjectRequirementClass> reqs)
+        {
+            var leadTimes = reqs
+                .Where(r => !r.RequestedDate.StringIsEmpty() && !r.PurchasedDate.StringIsEmpty())
+                .Select(r => (r.PurchasedDate.StringToDateTime() - r.RequestedDate.StringToDateTime()).TotalDays);
+            return leadTimes.Any() ? leadTimes.Average() : 0;
+        }
+
+        private double CalcOnTimeDeliveryRate(List<ProjectRequirementClass> reqs)
+        {
+            var delivered = reqs.Where(r => !r.DeliveredDate.StringIsEmpty() && !r.DueDate.StringIsEmpty());
+            int total = delivered.Count();
+            if (total == 0) return 0;
+            int onTime = delivered.Count(r => r.DeliveredDate.StringToDateTime() <= r.DueDate.StringToDateTime());
+            return (onTime / (double)total) * 100;
+        }
+        #endregion
+
+        /// <summary>
+        /// 統一錯誤回傳
+        /// </summary>
+        private IActionResult ErrorResponse(returnData request, int code, string message)
+        {
+            request.Code = code;
+            request.Result = message;
+            request.Data = null;
+            request.TimeTaken = "0.000s";
+            return BadRequest(request);
+        }
         #region ======== Utilities ========
         private static string Now() => DateTime.Now.ToDateTimeString();
         private static string Esc(string s) => (s ?? "").Replace("'", "''");
@@ -2019,7 +4071,7 @@ WHERE 專案GUID = '{Esc(guid)}' AND BOMGUID = '{Esc(g)}' LIMIT 1";
             //}
             return (true, "");
         }
-
+ 
         /// <summary>
         /// 將 class 屬性值更新進 object[] row
         /// </summary>
