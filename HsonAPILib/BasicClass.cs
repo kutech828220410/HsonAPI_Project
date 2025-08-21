@@ -33,6 +33,9 @@ namespace HsonAPILib
         private string _token = "";
         private List<string> valueAry = new List<string>();
 
+        // 這裡包含 TotalCount、TotalPages、以及所有額外欄位
+        [JsonExtensionData]
+        public Dictionary<string, object> Extra { get; set; } = new Dictionary<string, object>();
         /// <summary>
         /// 資料內容回傳或傳入,內容可為任意資料結構JSON格式,依據API自定義
         /// </summary>
@@ -200,7 +203,11 @@ namespace HsonAPILib
             JsonResult = json;
             return json;
         }
-
+        public void AddExtra(string key, object value)
+        {
+            if (Extra == null) Extra = new Dictionary<string, object>();
+            Extra[key] = value;
+        }
         public override string ToString()
         {
             return $"[{RequestUrl}] Result : {Result} ,{TimeTaken}";

@@ -131,6 +131,7 @@
     <Compile Include="productsClass.cs" />
     <Compile Include="product_filesClass.cs" />
     <Compile Include="product_itemsClass.cs" />
+    <Compile Include="projectClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="sessionClass.cs" />
     <Compile Include="sys_serverSettingClass.cs" />

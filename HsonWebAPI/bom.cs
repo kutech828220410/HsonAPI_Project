@@ -40,12 +40,8 @@ namespace HsonWebAPI
                     returnData.Result = "找不到 Server 設定";
                     return returnData.JsonSerializationt();
                 }
-
-                List<Table> tables = new List<Table>();
-                tables.Add(MethodClass.CheckCreatTable(conf, new enum_project_boms()));
-                tables.Add(MethodClass.CheckCreatTable(conf, new enum_bom_items()));
-                tables.Add(MethodClass.CheckCreatTable(conf, new enum_bom_documents()));
-
+                List<Table> tables = CheckCreatTable(conf);
+          
                 returnData.Code = 200;
                 returnData.Data = tables;
                 returnData.Result = "初始化 BOM 資料表完成";
@@ -79,7 +75,6 @@ namespace HsonWebAPI
         ///   "ServerName": "Main",
         ///   "ServerType": "網頁",
         ///   "ValueAry": [
-        ///     "projectGuid=660F9500-F39C-52E5-B827-557766551111",
         ///     "status=草稿",
         ///     "bomType=產品BOM",
         ///     "page=1",
@@ -99,7 +94,6 @@ namespace HsonWebAPI
         ///     {
         ///       "GUID": "550E8400-E29B-41D4-A716-446655440000",
         ///       "ID": "BOM001",
-        ///       "ProjectGUID": "660F9500-F39C-52E5-B827-557766551111",
         ///       "ProjectID": "PRJ001",
         ///       "name": "智慧交通控制器主機板",
         ///       "description": "智慧交通控制器的核心主機板組件",
@@ -158,7 +152,6 @@ namespace HsonWebAPI
 
                 // 3) 解析查詢參數
                 string GetVal(string key) => returnData.ValueAry?.FirstOrDefault(x => x.StartsWith($"{key}=", StringComparison.OrdinalIgnoreCase))?.Split('=')[1];
-                string projectGuid = GetVal("projectGuid") ?? "";
                 string status = GetVal("status") ?? "";
                 string bomType = GetVal("bomType") ?? "";
                 string sortBy = GetVal("sortBy") ?? "createdAt";
@@ -173,7 +166,6 @@ namespace HsonWebAPI
 
                 // 4) 組合查詢條件
                 string where = " WHERE 1=1 ";
-                if (!projectGuid.StringIsEmpty()) where += $" AND ProjectGUID = '{Esc(projectGuid)}' ";
                 if (!status.StringIsEmpty()) where += $" AND status = '{Esc(status)}' ";
                 if (!bomType.StringIsEmpty()) where += $" AND bomType = '{Esc(bomType)}' ";
 
@@ -2098,6 +2090,15 @@ namespace HsonWebAPI
 
             // 移除空白，避免 filename 有問題
             return sb.ToString().Replace(" ", "_");
+        }
+        private List<Table> CheckCreatTable(sys_serverSettingClass sys_serverSettingClass)
+        {
+            List<Table> tables = new List<Table>();
+            tables.Add(MethodClass.CheckCreatTable(sys_serverSettingClass, new enum_project_boms()));
+            tables.Add(MethodClass.CheckCreatTable(sys_serverSettingClass, new enum_bom_items()));
+            tables.Add(MethodClass.CheckCreatTable(sys_serverSettingClass, new enum_bom_documents()));
+
+            return tables;
         }
     }
 }

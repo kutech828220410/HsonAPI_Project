@@ -186,7 +186,7 @@ namespace HsonWebAPI
       IFormFile? file,                              // 單檔
       [FromForm] List<IFormFile>? files,            // 多檔 (files 或 files[])
       [FromForm] string product_code,
-      [FromForm] string file_category = "圖片",      // 建議：圖片/文件
+      [FromForm] string file_category = "圖片",      // 建議：圖片、圖面、規格書、技術文件、其他
       [FromForm] string? display_name = null,
       [FromForm] string? note = null,
       [FromForm] string? version = null,
@@ -445,28 +445,40 @@ namespace HsonWebAPI
         }
 
         /// <summary>
-        /// 取得產品圖片檔案清單
+        /// 取得產品檔案清單（支援分類與分頁）
         /// </summary>
         /// <remarks>
         /// 呼叫此 API 可依指定的 `product_code`（產品代碼）查詢 `product_files` 資料表，  
-        /// 並回傳該產品對應的所有圖片檔案資訊（包含上傳時間與檔案連結）。  
+        /// 並回傳該產品對應的所有檔案資訊（包含上傳時間與檔案連結）。  
+        /// 
+        /// **支援類別：**
+        /// - 圖片（預設）
+        /// - 圖面
+        /// - 規格書
+        /// - 技術文件
+        /// - 其他
+        /// - 文件（除圖片外的所有類別）
         /// 
         /// **查詢邏輯：**
         /// 1. 驗證 `ValueAry` 欄位不可為空，且必須包含 `product_code` 條件。  
-        /// 2. 依據 `product_code` 查詢 `product_files` 資料表，取得所有符合條件的紀錄。  
-        /// 3. 依 `upload_time` 欄位由新到舊排序。  
-        /// 4. 將結果以 JSON 格式回傳。  
-        /// 
-        /// **注意事項：**
-        /// - 若該產品尚未上傳任何圖片，則回傳空陣列。  
-        /// - `product_code` 必須完全一致（區分大小寫規則依資料庫設定）。  
+        /// 2. 若 `category` 未指定，預設為「圖片」。  
+        /// 3. 若 `category` 非合法值，則回傳錯誤。  
+        /// 4. 當 `category=文件` 時，會查詢「圖面、規格書、技術文件、其他」所有類別。  
+        /// 5. 依據 `product_code` 與 `category` 查詢 `product_files` 資料表，取得所有符合條件的紀錄。  
+        /// 6. 依 `upload_time` 欄位由新到舊排序。  
+        /// 7. 額外回傳 `TotalCount`（符合條件的總筆數）與 `TotalPages`（總頁數）。  
         /// 
         /// **JSON 請求範例：**
         /// <code>
         /// {
         ///     "ServerName": "Main",
         ///     "ServerType": "網頁",
-        ///     "ValueAry": [ "product_code=P001" ]
+        ///     "ValueAry": [
+        ///         "product_code=P001",
+        ///         "category=文件",
+        ///         "page=1",
+        ///         "pageSize=20"
+        ///     ]
         /// }
         /// </code>
         /// 
@@ -474,20 +486,17 @@ namespace HsonWebAPI
         /// <code>
         /// {
         ///     "Code": 200,
-        ///     "Result": "查詢完成，共 2 筆資料",
+        ///     "Result": "查詢完成，共 3 筆資料",
+        ///     "TotalCount": 57,
+        ///     "TotalPages": 3,
         ///     "Data": [
         ///         {
         ///             "product_code": "P001",
-        ///             "file_url": "https://example.com/images/P001_20250101.jpg",
-        ///             "upload_time": "2025-01-01 10:20:30"
-        ///         },
-        ///         {
-        ///             "product_code": "P001",
-        ///             "file_url": "https://example.com/images/P001_20241230.jpg",
-        ///             "upload_time": "2024-12-30 14:05:10"
+        ///             "file_url": "https://example.com/files/specs/P001_spec_v2.pdf",
+        ///             "upload_time": "2025-01-10 09:30:00"
         ///         }
         ///     ],
-        ///     "TimeTaken": "00:00:00.045"
+        ///     "TimeTaken": "00:00:00.032"
         /// }
         /// </code>
         /// </remarks>
@@ -501,10 +510,21 @@ namespace HsonWebAPI
                 string productCode = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("product_code="))?.Split('=')[1] ?? "";
                 if (productCode.StringIsEmpty())
                 {
-                    returnData.Code = -200; returnData.Result = "缺少 product_code"; return returnData.JsonSerializationt();
+                    returnData.Code = -200;
+                    returnData.Result = "缺少 product_code";
+                    return returnData.JsonSerializationt();
                 }
 
-                string category = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("category="))?.Split('=')[1] ?? "";
+                // ====== 類別處理 ======
+                string category = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("category="))?.Split('=')[1] ?? "圖片";
+                string[] validCategories = new[] { "圖片", "圖面", "規格書", "技術文件", "其他", "文件" };
+                if (!validCategories.Contains(category))
+                {
+                    returnData.Code = -200;
+                    returnData.Result = $"不支援的 category 類別，僅允許：{string.Join("、", validCategories)}";
+                    return returnData.JsonSerializationt();
+                }
+
                 string active = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("active="))?.Split('=')[1] ?? "";
                 string keyword = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("keyword="))?.Split('=')[1] ?? "";
                 int page = (returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("page="))?.Split('=')[1]).StringToInt32();
@@ -515,14 +535,29 @@ namespace HsonWebAPI
                 var servers = serverSetting.GetAllServerSetting();
                 var sv = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
                 var api01 = servers.myFind("Main", "網頁", "API01");
-                if (sv == null) { returnData.Code = -200; returnData.Result = "找不到 Server 設定"; return returnData.JsonSerializationt(); }
+                if (sv == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
 
                 string tFiles = new enum_product_files().GetEnumDescription();
                 var sql = new SQLControl(sv.Server, sv.DBName, tFiles, sv.User, sv.Password, sv.Port.StringToUInt32(), SSLMode);
                 string esc(string s) => (s ?? "").Replace("'", "''");
 
-                string where = $"WHERE 產品代碼 = '{esc(productCode)}'";
-                if (!category.StringIsEmpty()) where += $" AND 檔案類型 = '{esc(category)}'";
+                // ====== 條件組裝 ======
+                string where;
+                if (category == "文件")
+                {
+                    // 文件 = 除了圖片以外的所有類別
+                    where = $"WHERE 產品代碼 = '{esc(productCode)}' AND 檔案類型 <> '圖片'";
+                }
+                else
+                {
+                    where = $"WHERE 產品代碼 = '{esc(productCode)}' AND 檔案類型 = '{esc(category)}'";
+                }
+
                 if (active == "1" || active == "0") where += $" AND 啟用狀態 = '{esc(active)}'";
                 if (!keyword.StringIsEmpty())
                 {
@@ -530,6 +565,13 @@ namespace HsonWebAPI
                     where += $" AND (顯示名稱 LIKE '%{k}%' OR 檔案名稱 LIKE '%{k}%' OR 備註 LIKE '%{k}%' OR 內容類型 LIKE '%{k}%')";
                 }
 
+                // ====== 查詢總筆數 ======
+                var dtCount = sql.WtrteCommandAndExecuteReader($@"
+            SELECT COUNT(*) AS cnt FROM {sv.DBName}.{tFiles} {where};");
+                int totalCount = dtCount.Rows.Count > 0 ? dtCount.Rows[0]["cnt"].ToString().StringToInt32() : 0;
+                int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                // ====== 查詢分頁資料 ======
                 var dt = sql.WtrteCommandAndExecuteReader($@"
             SELECT * FROM {sv.DBName}.{tFiles}
             {where}
@@ -541,10 +583,13 @@ namespace HsonWebAPI
                 {
                     list[i].檔案網址 = $"{api01.Server}/{list[i].相對路徑}";
                 }
+
                 returnData.Code = 200;
-                returnData.Result = "OK";
+                returnData.Result = $"查詢完成，共 {list.Count} 筆資料";
                 returnData.TimeTaken = $"{t}";
                 returnData.Data = list;
+                returnData.AddExtra("TotalCount", totalCount.ToString());
+                returnData.AddExtra("TotalPages", totalPages.ToString());
                 return returnData.JsonSerializationt(true);
             }
             catch (Exception ex)
@@ -960,7 +1005,6 @@ namespace HsonWebAPI
         /// }
         /// </code>
         /// </remarks>
-
         [HttpPost("get_all_product_covers")]
         public string get_all_product_covers([FromBody] returnData returnData)
         {
