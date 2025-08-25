@@ -135,6 +135,7 @@
     <Compile Include="projectClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="sessionClass.cs" />
+    <Compile Include="suppliersClass.cs" />
     <Compile Include="sys_serverSettingClass.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

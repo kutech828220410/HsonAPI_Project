@@ -4270,11 +4270,11 @@ WHERE 專案GUID = '{Esc(guid)}' AND BOMGUID = '{Esc(g)}' LIMIT 1";
 
             // 3) 查詢 Projects
             string mainSql = $@"
-SELECT *
-FROM {conf.DBName}.{table}
-{where}
-ORDER BY {orderBy}
-LIMIT {offset}, {pageSize}";
+                SELECT *
+                FROM {conf.DBName}.{table}
+                {where}
+                ORDER BY {orderBy}
+                LIMIT {offset}, {pageSize}";
             var dt = sql.WtrteCommandAndExecuteReader(mainSql);
 
             var list = dt.DataTableToRowList().SQLToClass<projectClass, enum_projects>() ?? new List<projectClass>();
