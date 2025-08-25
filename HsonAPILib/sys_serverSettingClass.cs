@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using Basic;
 using System.ComponentModel;
 using System.Reflection;
+using SQLUI;
 
 namespace HsonAPILib
 {
@@ -95,11 +96,6 @@ namespace HsonAPILib
                                                                          select value).ToList();
             return sys_serverSettingClasses_buf;
         }
-
-
-
-
-
   
         public static List<sys_serverSettingClass> SetValue(this List<sys_serverSettingClass> sys_serverSettingClasses, sys_serverSettingClass sys_serverSettingClass)
         {
@@ -140,7 +136,10 @@ namespace HsonAPILib
             return department_types;
         }
 
-
+        public static SQLControl GetSQLControl(this sys_serverSettingClass conf, string tableName = "")
+        {
+            return new SQLControl(conf.Server, conf.DBName, tableName, conf.User, conf.Password, conf.Port.StringToUInt32(),  MySql.Data.MySqlClient.MySqlSslMode.None);
+        }
     }
     public class sys_serverSettingClass
     {

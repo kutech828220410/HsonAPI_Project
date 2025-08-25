@@ -271,8 +271,7 @@ namespace HsonWebAPI
                     return returnData.JsonSerializationt();
                 }
 
-                var servers = serverSetting.GetAllServerSetting();
-                var conf = servers.myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                var conf = serverSetting.GetAllServerSetting().myFind(returnData.ServerName, returnData.ServerType, "VM端");
                 if (conf == null)
                 {
                     returnData.Code = 404;
@@ -280,21 +279,13 @@ namespace HsonWebAPI
                     return returnData.JsonSerializationt();
                 }
 
-                string table = new enum_project_boms().GetEnumDescription();
-                var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
-
-                string Esc(string s) => (s ?? "").Replace("'", "''");
-                string sqlStr = $"SELECT * FROM {conf.DBName}.{table} WHERE GUID='{Esc(guid)}' LIMIT 1";
-                var dt = sql.WtrteCommandAndExecuteReader(sqlStr);
-
-                if (dt.Rows.Count == 0)
+                var bom = GetBomDetails(conf, guid);
+                if (bom == null)
                 {
                     returnData.Code = 404;
                     returnData.Result = $"查無 GUID={guid} 的 BOM";
                     return returnData.JsonSerializationt();
                 }
-
-                var bom = dt.DataTableToRowList().SQLToClass<ProjectBomClass, enum_project_boms>()[0];
 
                 returnData.Code = 200;
                 returnData.Result = "OK";
@@ -309,6 +300,7 @@ namespace HsonWebAPI
                 return returnData.JsonSerializationt();
             }
         }
+
         /// <summary>
         /// 建立新的 BOM 主檔
         /// </summary>
@@ -629,11 +621,11 @@ namespace HsonWebAPI
                     if (rows.Count == 0) { failed++; continue; }
 
                     var row = rows[0];
-                    if (row[(int)enum_project_boms.status].ObjectToString() != "草稿")
-                    {
-                        failed++;
-                        continue;
-                    }
+                    //if (row[(int)enum_project_boms.status].ObjectToString() != "草稿")
+                    //{
+                    //    failed++;
+                    //    continue;
+                    //}
 
                     sql.DeleteExtra(null, row);
                     deleted++;
@@ -950,8 +942,11 @@ namespace HsonWebAPI
 
             try
             {
-                // 驗證參數
-                string bomGuid = returnData.ValueAry?.FirstOrDefault(x => x.StartsWith("bomGuid=", StringComparison.OrdinalIgnoreCase))?.Split('=')[1];
+                // 取 bomGuid
+                string bomGuid = returnData.ValueAry?
+                    .FirstOrDefault(x => x.StartsWith("bomGuid=", StringComparison.OrdinalIgnoreCase))?
+                    .Split('=')[1];
+
                 if (bomGuid.StringIsEmpty())
                 {
                     returnData.Code = 400;
@@ -960,7 +955,9 @@ namespace HsonWebAPI
                 }
 
                 // 取得 DB 設定
-                var conf = serverSetting.GetAllServerSetting().myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                var conf = serverSetting.GetAllServerSetting()
+                                        .myFind(returnData.ServerName, returnData.ServerType, "VM端");
+
                 if (conf == null)
                 {
                     returnData.Code = -200;
@@ -968,18 +965,15 @@ namespace HsonWebAPI
                     return returnData.JsonSerializationt();
                 }
 
-                // 查詢
-                var sqlItems = new SQLControl(conf.Server, conf.DBName, new enum_bom_items().GetEnumDescription(), conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
-                string Esc(string s) => (s ?? "").Replace("'", "''");
-                string sql = $@"SELECT * FROM {conf.DBName}.{new enum_bom_items().GetEnumDescription()} WHERE BomGUID = '{Esc(bomGuid)}'";
-                var dt = sqlItems.WtrteCommandAndExecuteReader(sql);
+                // 呼叫靜態函式 → 得到 List<BomItemClass>
+                var list = GetBomItems(conf, bomGuid);
 
-                var list = dt.DataTableToRowList().SQLToClass<BomItemClass, enum_bom_items>();
-
+                // 包裝回傳
                 returnData.Code = 200;
                 returnData.Result = "獲取BOM項目成功";
                 returnData.TimeTaken = $"{timer}";
                 returnData.Data = list;
+
                 return returnData.JsonSerializationt();
             }
             catch (Exception ex)
@@ -1042,19 +1036,13 @@ namespace HsonWebAPI
                     return returnData.JsonSerializationt();
                 }
 
-                var sqlItems = new SQLControl(conf.Server, conf.DBName, new enum_bom_items().GetEnumDescription(), conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
-                string Esc(string s) => (s ?? "").Replace("'", "''");
-                string sql = $@"SELECT * FROM {conf.DBName}.{new enum_bom_items().GetEnumDescription()} WHERE GUID = '{Esc(itemGuid)}'";
-                var dt = sqlItems.WtrteCommandAndExecuteReader(sql);
-
-                if (dt.Rows.Count == 0)
+                var item = GetBomItemDetails(conf, itemGuid);
+                if (item == null)
                 {
                     returnData.Code = 404;
                     returnData.Result = $"查無 GUID={itemGuid} 的項目";
                     return returnData.JsonSerializationt();
                 }
-
-                var item = dt.DataTableToRowList().SQLToClass<BomItemClass, enum_bom_items>().First();
 
                 returnData.Code = 200;
                 returnData.Result = "OK";
@@ -1065,10 +1053,11 @@ namespace HsonWebAPI
             catch (Exception ex)
             {
                 returnData.Code = 500;
-                returnData.Result = $"Exception: {ex.Message}";
+                returnData.Result = ex.Message;
                 return returnData.JsonSerializationt();
             }
         }
+
         /// <summary>
         /// 在 BOM 中創建新項目
         /// </summary>
@@ -1785,7 +1774,7 @@ namespace HsonWebAPI
                 string bomID = bomRows[0][(int)enum_project_boms.ID].ObjectToString();
 
                 // === Step2: 檔案處理 ===
-                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents");
+                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents", "bom", bomID);
                 if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
 
                 string safeFileName = SanitizeFileName(Path.GetFileName(file.FileName));
@@ -1819,24 +1808,11 @@ namespace HsonWebAPI
                 ins[(int)enum_bom_documents.fileSize] = fi.Length.ToString();
                 ins[(int)enum_bom_documents.uploadDate] = now;
                 ins[(int)enum_bom_documents.uploadedBy] = userName;
-                ins[(int)enum_bom_documents.url] = $"/documents/{newFileName}";
+                ins[(int)enum_bom_documents.url] = $"/documents/bom/{bomID}/{newFileName}";
                 ins[(int)enum_bom_documents.notes] = notes ?? "";
                 sqlDoc.AddRow(null, ins);
 
-                var doc = new BomDocumentClass
-                {
-                    GUID = guid,
-                    ID = bomID,
-                    BomGUID = bomGUID,
-                    fileName = newFileName,
-                    originalName = file.FileName,
-                    type = type,
-                    fileSize = fi.Length.ToString(),
-                    uploadDate = now,
-                    uploadedBy = userName,
-                    url = $"/documents/{newFileName}",
-                    notes = notes
-                };
+                var doc = ins.SQLToClass<BomDocumentClass, enum_bom_documents>();
 
                 returnData.Code = 200;
                 returnData.Result = "檔案上傳成功";
@@ -1948,7 +1924,7 @@ namespace HsonWebAPI
         /// {
         ///   "ServerName": "Main",
         ///   "ServerType": "網頁",
-        //    "Data": [ { "GUID": "DOC-GUID-001" } ]
+        ///    "Data": [ { "GUID": "DOC-GUID-001" } ]
         /// }
         /// ```
         ///
@@ -2014,7 +1990,7 @@ namespace HsonWebAPI
                 var doc = rows[0].SQLToClass<BomDocumentClass, enum_bom_documents>();
 
                 // 檔案路徑
-                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents");
+                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documents" ,"bom", doc.ID);
                 string filePath = Path.Combine(folder, doc.fileName);
 
                 if (!System.IO.File.Exists(filePath))
@@ -2099,6 +2075,78 @@ namespace HsonWebAPI
             tables.Add(MethodClass.CheckCreatTable(sys_serverSettingClass, new enum_bom_documents()));
 
             return tables;
+        }
+
+
+        /// <summary>
+        /// 依 BOM GUID 取得 BOM 詳細資訊
+        /// </summary>
+        public static ProjectBomClass GetBomDetails(sys_serverSettingClass conf, string guid)
+        {
+            if (string.IsNullOrWhiteSpace(guid)) return null;
+
+            string table = new enum_project_boms().GetEnumDescription();
+            var sql = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+            string Esc(string s) => (s ?? "").Replace("'", "''");
+            string sqlStr = $"SELECT * FROM {conf.DBName}.{table} WHERE GUID='{Esc(guid)}' LIMIT 1";
+            var dt = sql.WtrteCommandAndExecuteReader(sqlStr);
+
+            if (dt.Rows.Count == 0) return null;
+
+            return dt.DataTableToRowList().SQLToClass<ProjectBomClass, enum_project_boms>().FirstOrDefault();
+        }
+
+        /// <summary>
+        /// 依 BOM Item GUID 取得項目詳細資訊
+        /// </summary>
+        public static BomItemClass GetBomItemDetails(sys_serverSettingClass conf, string itemGuid)
+        {
+            if (string.IsNullOrWhiteSpace(itemGuid)) return null;
+
+            string table = new enum_bom_items().GetEnumDescription();
+            var sqlItems = new SQLControl(conf.Server, conf.DBName, table, conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+            string Esc(string s) => (s ?? "").Replace("'", "''");
+            string sqlStr = $"SELECT * FROM {conf.DBName}.{table} WHERE GUID='{Esc(itemGuid)}' LIMIT 1";
+            var dt = sqlItems.WtrteCommandAndExecuteReader(sqlStr);
+
+            if (dt.Rows.Count == 0) return null;
+
+            return dt.DataTableToRowList().SQLToClass<BomItemClass, enum_bom_items>().FirstOrDefault();
+        }
+
+        /// <summary>
+        /// 靜態函式：獲取指定 BOM 的所有項目清單
+        /// </summary>
+        /// <param name="conf">DB 設定 (sys_serverSettingClass)</param>
+        /// <param name="bomGuid">BOM GUID (必填)</param>
+        /// <returns>List<BomItemClass></returns>
+        public static List<BomItemClass> GetBomItems(sys_serverSettingClass conf, string bomGuid)
+        {
+            if (conf == null) throw new ArgumentNullException(nameof(conf), "Server 設定不可為 null");
+            if (bomGuid.StringIsEmpty()) throw new ArgumentException("缺少必要參數：bomGuid", nameof(bomGuid));
+
+            // SQL 查詢
+            var sqlItems = new SQLControl(
+                conf.Server,
+                conf.DBName,
+                new enum_bom_items().GetEnumDescription(),
+                conf.User,
+                conf.Password,
+                conf.Port.StringToUInt32(),
+                SSLMode);
+
+            string Esc(string s) => (s ?? "").Replace("'", "''");
+            string sql = $@"SELECT * 
+                        FROM {conf.DBName}.{new enum_bom_items().GetEnumDescription()} 
+                        WHERE BomGUID = '{Esc(bomGuid)}'";
+
+            var dt = sqlItems.WtrteCommandAndExecuteReader(sql);
+            var list = dt.DataTableToRowList()
+                         .SQLToClass<BomItemClass, enum_bom_items>();
+
+            return list;
         }
     }
 }

@@ -6,6 +6,7 @@ using Basic;
 
 namespace HsonAPILib
 {
+    
     /// <summary>
     /// 專案主檔欄位枚舉
     /// </summary>
@@ -168,7 +169,6 @@ namespace HsonAPILib
         [Description("更新時間,DATETIME,20,NONE")]
         更新時間
     }
-
     /// <summary>
     /// 專案主檔資料類別（所有屬性為 string，對應前端 JSON 欄位）
     /// </summary>
@@ -345,7 +345,6 @@ namespace HsonAPILib
         [Description("更新時間,DATETIME,20,NONE")]
         更新時間
     }
-
     /// <summary>
     /// 專案 BOM 關聯資料類別（所有屬性為 string）
     /// </summary>
@@ -472,7 +471,6 @@ namespace HsonAPILib
         [Description("更新時間,DATETIME,20,NONE")]
         更新時間
     }
-
     /// <summary>
     /// 專案里程碑資料類別（所有屬性為 string，對應前端 JSON 欄位）
     /// </summary>
@@ -780,7 +778,6 @@ namespace HsonAPILib
         [Description("updated_at,DATETIME,20,NONE")]
         updated_at
     }
-
     /// <summary>
     /// 專案需求資料類別
     /// </summary>
@@ -789,125 +786,125 @@ namespace HsonAPILib
         [JsonPropertyName("GUID")]
         public string GUID { get; set; }
 
-        [JsonPropertyName("id")]
+        [JsonPropertyName("ID")]
         public string ID { get; set; }
 
         [JsonPropertyName("project_guid")]
-        public string ProjectGuid { get; set; }
+        public string project_guid { get; set; }
 
         [JsonPropertyName("project_id")]
-        public string ProjectId { get; set; }
+        public string project_id { get; set; }
 
         [JsonPropertyName("procurement_type")]
-        public string ProcurementType { get; set; }
+        public string procurement_type { get; set; }
 
         [JsonPropertyName("description")]
-        public string Description { get; set; }
+        public string description { get; set; }
 
         [JsonPropertyName("quantity")]
-        public string Quantity { get; set; }
+        public string quantity { get; set; }
 
         [JsonPropertyName("unit")]
-        public string Unit { get; set; }
+        public string unit { get; set; }
 
         [JsonPropertyName("status")]
-        public string Status { get; set; }
+        public string status { get; set; }
 
         [JsonPropertyName("priority")]
-        public string Priority { get; set; }
+        public string priority { get; set; }
 
         [JsonPropertyName("due_date")]
-        public string DueDate { get; set; }
+        public string due_date { get; set; }
 
         [JsonPropertyName("requested_date")]
-        public string RequestedDate { get; set; }
+        public string requested_date { get; set; }
 
         [JsonPropertyName("approved_date")]
-        public string ApprovedDate { get; set; }
+        public string approved_date { get; set; }
 
         [JsonPropertyName("purchased_date")]
-        public string PurchasedDate { get; set; }
+        public string purchased_date { get; set; }
 
         [JsonPropertyName("delivered_date")]
-        public string DeliveredDate { get; set; }
+        public string delivered_date { get; set; }
 
         [JsonPropertyName("accepted_date")]
-        public string AcceptedDate { get; set; }
+        public string accepted_date { get; set; }
 
         [JsonPropertyName("estimated_cost")]
-        public string EstimatedCost { get; set; }
+        public string estimated_cost { get; set; }
 
         [JsonPropertyName("actual_cost")]
-        public string ActualCost { get; set; }
+        public string actual_cost { get; set; }
 
         [JsonPropertyName("approved_budget")]
-        public string ApprovedBudget { get; set; }
+        public string approved_budget { get; set; }
 
         [JsonPropertyName("item_id")]
-        public string ItemId { get; set; }
+        public string item_id { get; set; }
 
         [JsonPropertyName("item_name")]
-        public string ItemName { get; set; }
+        public string item_name { get; set; }
 
         [JsonPropertyName("item_code")]
-        public string ItemCode { get; set; }
+        public string item_code { get; set; }
 
         [JsonPropertyName("supplier_name")]
-        public string SupplierName { get; set; }
+        public string supplier_name { get; set; }
 
         [JsonPropertyName("bom_guid")]
-        public string BomGuid { get; set; }
+        public string bom_guid { get; set; }
 
         [JsonPropertyName("bom_id")]
-        public string BomId { get; set; }
+        public string bom_id { get; set; }
 
         [JsonPropertyName("is_from_bom")]
-        public string IsFromBom { get; set; }
+        public string is_from_bom { get; set; }
 
         [JsonPropertyName("purchase_order_id")]
-        public string PurchaseOrderId { get; set; }
+        public string purchase_order_id { get; set; }
 
         [JsonPropertyName("vendor_quote_amount")]
-        public string VendorQuoteAmount { get; set; }
+        public string vendor_quote_amount { get; set; }
 
         [JsonPropertyName("negotiated_amount")]
-        public string NegotiatedAmount { get; set; }
+        public string negotiated_amount { get; set; }
 
         [JsonPropertyName("requester")]
-        public string Requester { get; set; }
+        public string requester { get; set; }
 
         [JsonPropertyName("approver")]
-        public string Approver { get; set; }
+        public string approver { get; set; }
 
         [JsonPropertyName("purchaser")]
-        public string Purchaser { get; set; }
+        public string purchaser { get; set; }
 
         [JsonPropertyName("specifications")]
-        public string Specifications { get; set; }
+        public string specifications { get; set; }
 
         [JsonPropertyName("delivery_address")]
-        public string DeliveryAddress { get; set; }
+        public string delivery_address { get; set; }
 
         [JsonPropertyName("notes")]
-        public string Notes { get; set; }
+        public string notes { get; set; }
 
         [JsonPropertyName("is_active")]
-        public string IsActive { get; set; }
+        public string is_active { get; set; }
 
         [JsonPropertyName("created_by")]
-        public string CreatedBy { get; set; }
+        public string created_by { get; set; }
 
         [JsonPropertyName("created_at")]
-        public string CreatedAt { get; set; }
+        public string created_at { get; set; }
 
         [JsonPropertyName("updated_by")]
-        public string UpdatedBy { get; set; }
+        public string updated_by { get; set; }
 
         [JsonPropertyName("updated_at")]
-        public string UpdatedAt { get; set; }
+        public string updated_at { get; set; }
 
         [JsonPropertyName("items")]
-        public List<BomRequirementItemClass> Items { get; set; }
+        public List<BomRequirementItemClass> items { get; set; }
     }
 
 
@@ -936,6 +933,10 @@ namespace HsonAPILib
         /// <summary>項目描述</summary>
         [Description("item_description,TEXT,20,NONE")]
         ItemDescription,
+
+        /// <summary>料號</summary>
+        [Description("item_name,VARCHAR,300,NONE")]
+        ItemName,
 
         /// <summary>料號</summary>
         [Description("item_code,VARCHAR,50,NONE")]
@@ -993,6 +994,10 @@ namespace HsonAPILib
         [Description("supplier_part_number,VARCHAR,100,NONE")]
         SupplierPartNumber,
 
+        /// <summary>交期</summary>
+        [Description("due_date,VARCHAR,10,NONE")]
+        dueDate,
+
         /// <summary>交期天數</summary>
         [Description("lead_time_days,VARCHAR,10,NONE")]
         LeadTimeDays,
@@ -1021,7 +1026,6 @@ namespace HsonAPILib
         [Description("updated_at,DATETIME,20,NONE")]
         UpdatedAt
     }
-
     /// <summary>
     /// BOM 需求項目資料類別
     /// </summary>
@@ -1050,6 +1054,10 @@ namespace HsonAPILib
         /// <summary>料號</summary>
         [JsonPropertyName("item_code")]
         public string ItemCode { get; set; }
+
+        /// <summary>項目名稱</summary>
+        [JsonPropertyName("item_name")]
+        public string ItemName { get; set; }
 
         /// <summary>數量</summary>
         [JsonPropertyName("quantity")]
@@ -1106,6 +1114,10 @@ namespace HsonAPILib
         /// <summary>交期天數</summary>
         [JsonPropertyName("lead_time_days")]
         public string LeadTimeDays { get; set; }
+
+        /// <summary>交期天數</summary>
+        [JsonPropertyName("due_date")]
+        public string dueDate { get; set; }
 
         /// <summary>備註</summary>
         [JsonPropertyName("notes")]
@@ -1170,7 +1182,6 @@ namespace HsonAPILib
         [Description("notes,TEXT,20,NONE")]
         Notes
     }
-
     /// <summary>
     /// 需求狀態歷程紀錄資料類別
     /// </summary>
@@ -1207,6 +1218,105 @@ namespace HsonAPILib
         /// <summary>變更備註</summary>
         [JsonPropertyName("notes")]
         public string Notes { get; set; }
+    }
+
+
+    /// <summary>
+    /// BOM 文件欄位枚舉
+    /// </summary>
+    [EnumDescription("project_documents")]
+    public enum enum_project_documents
+    {
+        [Description("GUID,VARCHAR,50,PRIMARY")]
+        GUID,
+
+        /// <summary>文件編號</summary>
+        [Description("ID,VARCHAR,50,INDEX")]
+        ID,
+
+        /// <summary>所屬 BOM GUID</summary>
+        [Description("project_GUID,VARCHAR,50,INDEX")]
+        project_GUID,
+
+        /// <summary>檔案名稱</summary>
+        [Description("fileName,VARCHAR,255,NONE")]
+        fileName,
+
+        /// <summary>原始檔案名稱</summary>
+        [Description("originalName,VARCHAR,255,NONE")]
+        originalName,
+
+        /// <summary>檔案類型（圖面/規格書/技術文件/其他）</summary>
+        [Description("type,VARCHAR,50,NONE")]
+        type,
+
+        /// <summary>檔案大小</summary>
+        [Description("fileSize,VARCHAR,50,NONE")]
+        fileSize,
+
+        /// <summary>上傳日期</summary>
+        [Description("uploadDate,DATETIME,20,INDEX")]
+        uploadDate,
+
+        /// <summary>上傳者</summary>
+        [Description("uploadedBy,VARCHAR,100,NONE")]
+        uploadedBy,
+
+        /// <summary>檔案網址</summary>
+        [Description("url,VARCHAR,500,NONE")]
+        url,
+
+        /// <summary>備註</summary>
+        [Description("notes,VARCHAR,500,NONE")]
+        notes
+    }
+    /// <summary>
+    /// BOM 文件類別
+    /// </summary>
+    public class projectDocumentClass
+    {
+        [JsonPropertyName("GUID")]
+        public string GUID { get; set; }
+
+        /// <summary>文件編號</summary>
+        [JsonPropertyName("ID")]
+        public string ID { get; set; }
+
+        /// <summary>所屬 project_GUID</summary>
+        [JsonPropertyName("project_GUID")]
+        public string project_GUID { get; set; }
+
+        /// <summary>檔案名稱</summary>
+        [JsonPropertyName("fileName")]
+        public string fileName { get; set; }
+
+        /// <summary>原始檔案名稱</summary>
+        [JsonPropertyName("originalName")]
+        public string originalName { get; set; }
+
+        /// <summary>檔案類型（圖面/規格書/技術文件/其他）</summary>
+        [JsonPropertyName("type")]
+        public string type { get; set; }
+
+        /// <summary>檔案大小</summary>
+        [JsonPropertyName("fileSize")]
+        public string fileSize { get; set; }
+
+        /// <summary>上傳日期</summary>
+        [JsonPropertyName("uploadDate")]
+        public string uploadDate { get; set; }
+
+        /// <summary>上傳者</summary>
+        [JsonPropertyName("uploadedBy")]
+        public string uploadedBy { get; set; }
+
+        /// <summary>檔案網址</summary>
+        [JsonPropertyName("url")]
+        public string url { get; set; }
+
+        /// <summary>備註</summary>
+        [JsonPropertyName("notes")]
+        public string notes { get; set; }
     }
 
 }

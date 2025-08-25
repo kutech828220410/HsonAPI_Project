@@ -150,7 +150,8 @@
       <param name="targetType">The type to which items in the collection are being converted.</param>
       <param name="forceSuccess">A Boolean value that determines how conversion errors are handled.  
   
- If <paramref name="forceSuccess" /> is <see langword="true" />, conversion errors due to a mapping not being found for the translation result in a failed conversion and exceptions being thrown.  
+ If <paramref name="forceSuccess" /> is <see langword="true" />, conversion errors 
+ to a mapping not being found for the translation result in a failed conversion and exceptions being thrown.  
   
  If <paramref name="forceSuccess" /> is <see langword="false" />, types that failed to convert due to a mapping not being found for the translation are copied without being converted into the collection being returned.</param>
       <returns>A <see cref="T:System.Security.Principal.IdentityReferenceCollection" /> collection that represents the converted contents of the original collection.</returns>

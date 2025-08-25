@@ -50,6 +50,10 @@ namespace HsonAPILib
         [Description("售價,VARCHAR,50,NONE")]
         售價,
 
+        /// <summary>成本（文字儲存，可含貨幣單位）</summary>
+        [Description("成本,VARCHAR,50,NONE")]
+        成本,
+
         /// <summary>產品狀態（啟用、停用、停售等）</summary>
         [Description("狀態,VARCHAR,50,NONE")]
         狀態,
@@ -84,7 +88,11 @@ namespace HsonAPILib
 
         /// <summary>圖片連結</summary>
         [Description("圖片連結,VARCHAR,500,NONE")]
-        圖片連結
+        圖片連結,
+
+        /// <summary>產品連結</summary>
+        [Description("產品連結,VARCHAR,500,NONE")]
+        產品連結
     }
 
     /// <summary>
@@ -179,6 +187,10 @@ namespace HsonAPILib
         /// <summary>圖片連結</summary>
         [JsonPropertyName("img_url")]
         public string 圖片連結 { get; set; }
+
+        /// <summary>產品連結</summary>
+        [JsonPropertyName("producturl")]
+        public string 產品連結 { get; set; }
 
         [JsonPropertyName("child_count")]
         public int child_count { get; set; }

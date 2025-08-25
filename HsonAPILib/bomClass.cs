@@ -366,7 +366,6 @@ namespace HsonAPILib
         [Description("notes,VARCHAR,500,NONE")]
         notes
     }
-
     /// <summary>
     /// BOM 文件類別
     /// </summary>

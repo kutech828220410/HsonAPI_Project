@@ -65,25 +65,67 @@ namespace HsonWebAPI
             return GetPermissions(level.StringToInt32(), "", "").JsonSerializationt();
         }
         /// <summary>
-        /// 使用者登入,取得session資訊,[ID,Pwd]、[UID]、[BARCODE]任一即可登入系統，若為admin則直接登入最高權限
+        /// 使用者登入，取得系統 Session 資訊。
         /// </summary>
         /// <remarks>
-        ///  --------------------------------------------<br/> 
-        /// 以下為範例JSON範例
-        /// <code>
-        ///   {
-        ///     "Data": 
-        ///     {
-        ///        "ID" : "",
-        ///        "Password" : "",
-        ///        "UID" : "",
-        ///        "BARCODE" : ""
-        ///     }
+        /// <para>
+        /// ✅ 可使用以下任一方式登入：<br/>
+        /// - [ID, Password]<br/>
+        /// - [UID] (卡號)<br/>
+        /// - [BARCODE] (一維條碼)<br/>
+        /// </para>
+        /// <para>
+        /// 若輸入帳號為 <c>admin</c> 且密碼為 <c>66437068</c>，則直接登入最高權限。
+        /// </para>
+        /// 
+        /// <h3>📌 Request 範例</h3>
+        /// <code language="json">
+        /// {
+        ///   "ServerName": "Main",
+        ///   "ServerType": "網頁",
+        ///   "Data": {
+        ///     "ID": "user01",
+        ///     "Password": "123456",
+        ///     "UID": "",
+        ///     "BARCODE": ""
         ///   }
+        /// }
+        /// </code>
+        /// 
+        /// <h3>成功 Response 範例</h3>
+        /// <code language="json">
+        /// {
+        ///   "Code": 200,
+        ///   "Result": "登入成功!",
+        ///   "Data": {
+        ///     "GUID": "9E9B7D4A-52F9-4E3A-BD28-2B5D3B13D66F",
+        ///     "ID": "user01",
+        ///     "Password": "123456",
+        ///     "Name": "王小明",
+        ///     "Employer": "研發部",
+        ///     "verifyTime": "2025-08-22 10:12:45",
+        ///     "loginTime": "2025-08-22 10:12:45",
+        ///     "level": "3",
+        ///     "Color": "#FF5733",
+        ///     "Permissions": [
+        ///        "專案管理",
+        ///        "採購需求維護",
+        ///        "報表查詢"
+        ///     ]
+        ///   }
+        /// }
+        /// </code>
+        /// 
+        /// <h3> 失敗 Response 範例</h3>
+        /// <code language="json">
+        /// {
+        ///   "Code": -2,
+        ///   "Result": "密碼錯誤!"
+        /// }
         /// </code>
         /// </remarks>
-        /// <param name="returnData">共用傳遞資料結構</param>
-        /// <returns>[returnData.Data][sessionClass]</returns>
+        /// <param name="returnData">共用傳遞資料結構，需包含登入資訊</param>
+        /// <returns>回傳 JSON 格式的 <see cref="sessionClass"/>，包含登入後的 Session 資訊與權限</returns>
         [Route("login")]
         [HttpPost]
         public string POST_login([FromBody] returnData returnData)

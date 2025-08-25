@@ -128,6 +128,7 @@
     <Compile Include="hospital_reportClass.cs" />
     <Compile Include="MethodClass.cs" />
     <Compile Include="personClass.cs" />
+    <Compile Include="procurementClass.cs" />
     <Compile Include="productsClass.cs" />
     <Compile Include="product_filesClass.cs" />
     <Compile Include="product_itemsClass.cs" />

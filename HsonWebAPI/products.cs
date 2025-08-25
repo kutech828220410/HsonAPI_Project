@@ -1254,7 +1254,7 @@ namespace HsonWebAPI
         /// 從 <c>products</c> 與 <c>product_components</c> 資料表一次載入全部資料，  
         /// 回傳每個產品的基本屬性（產品代碼、產品名稱、廠牌、售價、狀態、產品類型、產品分類）、  
         /// 直接子項清單（<c>child_components</c>）與直接父項清單（<c>parent_products</c>），  
-        /// 關聯清單中包含 <c>parent_code</c>、<c>child_code</c> 與 <c>數量</c>，  
+        /// 關聯清單中包含 <c>parent_code</c>、<c>child_code</c>、<c>數量</c>、<c>產品名稱</c>、<c>產品分類</c>，  
         /// 並提供 <c>child_count</c> 與 <c>parent_count</c> 數量欄位，方便前端快速顯示。  
         /// 此方法僅進行兩次 SQL 查詢，適合網頁載入時快速初始化全產品結構。
         ///
@@ -1262,15 +1262,10 @@ namespace HsonWebAPI
         /// <code>
         /// {
         ///     "ServerName": "Main",
-        ///     "ServerType": "VM端",
+        ///     "ServerType": "網頁",
         ///     "ValueAry": []
         /// }
         /// </code>
-        ///
-        /// **欄位說明：**
-        /// - ServerName：伺服器名稱（對應設定檔）
-        /// - ServerType：伺服器類型（如「VM端」、「API」、「網頁」）
-        /// - ValueAry：無需參數（保留擴充用途）
         ///
         /// **回傳範例：**
         /// <code>
@@ -1289,8 +1284,8 @@ namespace HsonWebAPI
         ///             "child_count": 2,
         ///             "parent_count": 0,
         ///             "child_components": [
-        ///                 { "parent_code": "P001", "child_code": "C001", "數量": "3" },
-        ///                 { "parent_code": "P001", "child_code": "C002", "數量": "5" }
+        ///                 { "parent_code": "P001", "child_code": "C001", "數量": "3", "產品名稱": "子零件一號", "產品分類": "耗材" },
+        ///                 { "parent_code": "P001", "child_code": "C002", "數量": "5", "產品名稱": "子零件二號", "產品分類": "配件" }
         ///             ],
         ///             "parent_products": []
         ///         }
@@ -1329,8 +1324,17 @@ namespace HsonWebAPI
 
                 // 一次撈全部產品（含基本屬性 + 產品類型 + 產品分類）
                 var dtProd = sqlProducts.WtrteCommandAndExecuteReader($@"
-            SELECT 產品代碼, 產品名稱, 廠牌, 售價, 狀態, 產品類型, 產品分類, 規格, 條碼清單, 備註
+            SELECT *
             FROM {sqlProducts.Database}.{productsTable}");
+
+                // 建立產品快取 (代碼 → 名稱 / 分類)
+                var productInfo = dtProd.AsEnumerable()
+                    .ToDictionary(
+                        r => r["產品代碼"].ToString(),
+                        r => new {
+                            名稱 = r["產品名稱"].ToString(),
+                        }
+                    );
 
                 // 一次撈全部關聯（含數量）
                 var dtComp = sqlComponents.WtrteCommandAndExecuteReader($@"
@@ -1338,25 +1342,34 @@ namespace HsonWebAPI
             FROM {sqlComponents.Database}.{componentsTable}
             WHERE parent_code <> child_code");
 
-                // 關聯映射
+                // 關聯映射 - 子清單
                 var childrenByParent = dtComp.AsEnumerable()
                     .GroupBy(r => r["parent_code"].ToString())
-                    .ToDictionary(g => g.Key, g => g.Select(r => new product_componentsClass
-                    {
-                        parent_code = r["parent_code"].ToString(),
-                        child_code = r["child_code"].ToString(),
-                        數量 = r["數量"].ToString(),
-                        child_components = new List<product_componentsClass>()
+                    .ToDictionary(g => g.Key, g => g.Select(r => {
+                        var childCode = r["child_code"].ToString();
+                        return new product_componentsClass
+                        {
+                            parent_code = r["parent_code"].ToString(),
+                            child_code = childCode,
+                            數量 = r["數量"].ToString(),
+                            產品名稱 = productInfo.ContainsKey(childCode) ? productInfo[childCode].名稱 : "",
+                            child_components = new List<product_componentsClass>()
+                        };
                     }).ToList());
 
+                // 關聯映射 - 父清單
                 var parentsByChild = dtComp.AsEnumerable()
                     .GroupBy(r => r["child_code"].ToString())
-                    .ToDictionary(g => g.Key, g => g.Select(r => new product_componentsClass
-                    {
-                        parent_code = r["parent_code"].ToString(),
-                        child_code = r["child_code"].ToString(),
-                        數量 = r["數量"].ToString(),
-                        child_components = new List<product_componentsClass>()
+                    .ToDictionary(g => g.Key, g => g.Select(r => {
+                        var parentCode = r["parent_code"].ToString();
+                        return new product_componentsClass
+                        {
+                            parent_code = parentCode,
+                            child_code = r["child_code"].ToString(),
+                            數量 = r["數量"].ToString(),
+                            產品名稱 = productInfo.ContainsKey(parentCode) ? productInfo[parentCode].名稱 : "",
+                            child_components = new List<product_componentsClass>()
+                        };
                     }).ToList());
 
                 // 組 List<productsClass>
@@ -1370,11 +1383,13 @@ namespace HsonWebAPI
                         產品名稱 = row["產品名稱"].ToString(),
                         廠牌 = row["廠牌"].ToString(),
                         售價 = row["售價"].ToString(),
+                        成本 = row["成本"].ToString(),
                         狀態 = row["狀態"].ToString(),
                         產品類型 = row["產品類型"].ToString(),
                         產品分類 = row["產品分類"].ToString(),
                         規格 = row["規格"].ToString(),
                         條碼清單 = row["條碼清單"].ToString(),
+                        產品連結 = row["產品連結"].ToString(),
                         備註 = row["備註"].ToString(),
                         child_components = childrenByParent.ContainsKey(code) ? childrenByParent[code] : new List<product_componentsClass>(),
                         parent_products = parentsByChild.ContainsKey(code) ? parentsByChild[code] : new List<product_componentsClass>(),
@@ -1397,8 +1412,103 @@ namespace HsonWebAPI
                 return returnData.JsonSerializationt();
             }
         }
+        /// <summary>
+        /// 依產品代碼取得產品結構與基本資訊
+        /// </summary>
+        /// <remarks>
+        /// 依據 <c>產品代碼</c> 查詢單一產品，回傳其基本屬性、子項清單、父項清單。  
+        /// 適合用於前端查詢特定產品細節。  
+        ///
+        /// **JSON 請求範例：**
+        /// ```json
+        /// {
+        ///     "ServerName": "Main",
+        ///     "ServerType": "網頁",
+        ///     "ValueAry": ["code=P001"]
+        /// }
+        /// ```
+        ///
+        /// **回傳範例：**
+        /// ```json
+        /// {
+        ///     "Code": 200,
+        ///     "Result": "OK",
+        ///     "Data": {
+        ///         "產品代碼": "P001",
+        ///         "產品名稱": "主產品一號",
+        ///         "廠牌": "品牌A",
+        ///         "售價": "100",
+        ///         "狀態": "active",
+        ///         "產品類型": "bundle",
+        ///         "產品分類": "醫療器材",
+        ///         "child_count": 2,
+        ///         "parent_count": 0,
+        ///         "child_components": [
+        ///             { "parent_code": "P001", "child_code": "C001", "數量": "3", "產品名稱": "子零件一號" },
+        ///             { "parent_code": "P001", "child_code": "C002", "數量": "5", "產品名稱": "子零件二號" }
+        ///         ],
+        ///         "parent_products": []
+        ///     },
+        ///     "TimeTaken": "0.008 秒"
+        /// }
+        /// ```
+        /// </remarks>
+        [Route("get_product_by_code")]
+        [HttpPost]
+        public string get_product_by_code([FromBody] returnData returnData)
+        {
+            var timer = new MyTimerBasic();
+            returnData.Method = "get_product_by_code";
 
-    
+            try
+            {
+                // 驗證參數
+                string code = returnData.ValueAry?
+                    .FirstOrDefault(x => x.StartsWith("code=", StringComparison.OrdinalIgnoreCase))?
+                    .Split('=')[1];
+
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    returnData.Code = 400;
+                    returnData.Result = "缺少必要參數：code";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 取得 DB 設定
+                var conf = serverSetting.GetAllServerSetting()
+                                        .myFind(returnData.ServerName, returnData.ServerType, "VM端");
+                if (conf == null)
+                {
+                    returnData.Code = -200;
+                    returnData.Result = "找不到 Server 設定";
+                    return returnData.JsonSerializationt();
+                }
+
+                // 呼叫靜態函式
+                var product = GetProductByCode(conf, code);
+                if (product == null)
+                {
+                    returnData.Code = 404;
+                    returnData.Result = $"查無產品代碼：{code}";
+                    return returnData.JsonSerializationt();
+                }
+
+                returnData.Data = product;
+                returnData.Code = 200;
+                returnData.Result = "OK";
+                returnData.TimeTaken = $"{timer}";
+                return returnData.JsonSerializationt();
+            }
+            catch (Exception ex)
+            {
+                returnData.Code = -200;
+                returnData.Result = $"伺服器錯誤：{ex.Message}";
+                return returnData.JsonSerializationt();
+            }
+        }
+
+
+
 
 
         /// <summary>
@@ -1431,7 +1541,7 @@ namespace HsonWebAPI
         /// </example>
         private productsClass GetProductInfo(string code, SQLControl sqlProd, string prodTable)
         {
-            string sql = $@"SELECT 產品代碼, 產品名稱, 廠牌, 售價, 狀態 , 規格 , 條碼清單, 備註 
+            string sql = $@"SELECT 產品代碼, 產品名稱, 廠牌, 售價, 成本, 狀態 , 規格 , 條碼清單, 備註 
                     FROM {sqlProd.Database}.{prodTable}
                     WHERE 產品代碼 = '{code.Replace("'", "''")}'";
             var dt = sqlProd.WtrteCommandAndExecuteReader(sql);
@@ -1443,6 +1553,7 @@ namespace HsonWebAPI
                 產品名稱 = dt.Rows[0]["產品名稱"].ToString(),
                 廠牌 = dt.Rows[0]["廠牌"].ToString(),
                 售價 = dt.Rows[0]["售價"].ToString(),
+                成本 = dt.Rows[0]["成本"].ToString(),
                 狀態 = dt.Rows[0]["狀態"].ToString(),
                 規格 = dt.Rows[0]["規格"].ToString(),
                 條碼清單 = dt.Rows[0]["條碼清單"].ToString(),
@@ -1494,7 +1605,7 @@ namespace HsonWebAPI
             visited.Add(parentCode);
 
             string sql = $@"
-        SELECT c.*, p.產品名稱, p.廠牌, p.售價, p.狀態, p.規格, p.備註, p.條碼清單
+        SELECT c.*, p.產品名稱, p.廠牌, p.售價, p.成本, p.狀態, p.規格, p.備註, p.條碼清單
         FROM {sqlComp.Database}.{compTable} AS c
         LEFT JOIN {sqlProd.Database}.{prodTable} AS p ON c.child_code = p.產品代碼
         WHERE c.parent_code = '{parentCode.Replace("'", "''")}'
@@ -1511,6 +1622,7 @@ namespace HsonWebAPI
                     產品名稱 = row["產品名稱"].ToString(),
                     廠牌 = row["廠牌"].ToString(),
                     售價 = row["售價"].ToString(),
+                    成本 = row["成本"].ToString(),
                     狀態 = row["狀態"].ToString(),
                     數量 = row["數量"].ToString(),
                     規格 = row["規格"].ToString(),
@@ -1566,7 +1678,7 @@ namespace HsonWebAPI
 
             // 找直接父項
             string sql = $@"
-        SELECT c.parent_code, c.child_code, c.數量, p.產品名稱, p.廠牌, p.售價, p.狀態, p.規格, p.條碼清單, p.備註
+        SELECT c.parent_code, c.child_code, c.數量, p.產品名稱, p.廠牌, p.售價, p.成本, p.狀態, p.規格, p.條碼清單, p.備註
         FROM {sqlComp.Database}.{compTable} AS c
         LEFT JOIN {sqlProd.Database}.{prodTable} AS p ON c.parent_code = p.產品代碼
         WHERE c.child_code = '{childCode.Replace("'", "''")}'
@@ -1584,6 +1696,7 @@ namespace HsonWebAPI
                     產品名稱 = row["產品名稱"].ToString(),
                     廠牌 = row["廠牌"].ToString(),
                     售價 = row["售價"].ToString(),
+                    成本 = row["成本"].ToString(),
                     狀態 = row["狀態"].ToString(),
                     規格 = row["規格"].ToString(),
                     數量 = row["數量"].ToString(),
@@ -1670,7 +1783,7 @@ namespace HsonWebAPI
             // 找直接父項
             string sql = $@"
         SELECT c.parent_code, c.child_code, c.數量, 
-               p.產品名稱, p.廠牌, p.售價, p.狀態, p.規格, p.條碼清單, p.備註
+               p.產品名稱, p.廠牌, p.售價, p.成本, p.狀態, p.規格, p.條碼清單, p.備註
         FROM {sqlComp.Database}.{compTable} AS c
         LEFT JOIN {sqlProd.Database}.{prodTable} AS p 
                ON c.parent_code = p.產品代碼
@@ -1689,6 +1802,7 @@ namespace HsonWebAPI
                     產品名稱 = row["產品名稱"].ToString(),
                     廠牌 = row["廠牌"].ToString(),
                     售價 = row["售價"].ToString(),
+                    成本 = row["成本"].ToString(),
                     狀態 = row["狀態"].ToString(),
                     數量 = row["數量"].ToString(),
                     備註 = row["備註"].ToString(),
@@ -1777,8 +1891,128 @@ namespace HsonWebAPI
             return count;
         }
 
+        /// <summary>
+        /// 靜態函式：依產品代碼取得單一產品結構
+        /// </summary>
+        /// <param name="conf">資料庫設定</param>
+        /// <param name="code">產品代碼</param>
+        /// <returns>productsClass，若找不到則回傳 null</returns>
+        public static productsClass GetProductByCode(sys_serverSettingClass conf, string code)
+        {
+            if (conf == null) throw new ArgumentNullException(nameof(conf), "DB 設定不可為 null");
+            if (string.IsNullOrWhiteSpace(code)) throw new ArgumentException("產品代碼不可為空", nameof(code));
 
+            string productsTable = new enum_products().GetEnumDescription();
+            string componentsTable = new enum_product_components().GetEnumDescription();
 
+            var sqlProducts = new SQLControl(conf.Server, conf.DBName, productsTable,
+                conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+            var sqlComponents = new SQLControl(conf.Server, conf.DBName, componentsTable,
+                conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+            // 查產品
+            var dtProd = sqlProducts.WtrteCommandAndExecuteReader($@"
+            SELECT *
+            FROM {sqlProducts.Database}.{productsTable}
+            WHERE 產品代碼 = '{code.Replace("'", "''")}'
+        ");
+
+            if (dtProd.Rows.Count == 0) return null;
+            var dt_all_Prod = sqlProducts.WtrteCommandAndExecuteReader($@"
+            SELECT *
+            FROM {sqlProducts.Database}.{productsTable}");
+            // 建立產品快取 (代碼 → 名稱 / 分類)
+            var productInfo = dt_all_Prod.AsEnumerable()
+                .ToDictionary(
+                    r => r["產品代碼"].ToString(),
+                    r => new {
+                        名稱 = r["產品名稱"].ToString(),
+                        規格 = r["規格"].ToString(),
+                        產品類型 = r["產品類型"].ToString(),
+                        產品分類 = r["產品分類"].ToString(),
+                        產品連結 = r["產品連結"].ToString(),
+                        備註 = r["備註"].ToString(),
+                    }
+                );
+            // 撈關聯
+            var dtComp = sqlComponents.WtrteCommandAndExecuteReader($@"
+            SELECT parent_code, child_code, 數量
+            FROM {sqlComponents.Database}.{componentsTable}
+            WHERE parent_code = '{code.Replace("'", "''")}' OR child_code = '{code.Replace("'", "''")}'
+        ");
+
+            // 子清單
+            var children = dtComp.AsEnumerable()
+                .Where(r => r["parent_code"].ToString() == code)
+                .Select(r => new product_componentsClass
+                {
+                    parent_code = r["parent_code"].ToString(),
+                    child_code = r["child_code"].ToString(),
+                    數量 = r["數量"].ToString(),
+                    產品名稱 = productInfo.ContainsKey(r["child_code"].ToString()) ? productInfo[r["child_code"].ToString()].名稱 : "",
+                    規格 = productInfo.ContainsKey(r["child_code"].ToString()) ? productInfo[r["child_code"].ToString()].規格 : "",
+                    備註 = productInfo.ContainsKey(r["child_code"].ToString()) ? productInfo[r["child_code"].ToString()].備註 : "",
+                }).ToList();
+
+            // 父清單
+            var parents = dtComp.AsEnumerable()
+                .Where(r => r["child_code"].ToString() == code)
+                .Select(r => new product_componentsClass
+                {
+                    parent_code = r["parent_code"].ToString(),
+                    child_code = r["child_code"].ToString(),
+                    數量 = r["數量"].ToString(),
+                    產品名稱 = productInfo.ContainsKey(r["parent_code"].ToString()) ? productInfo[r["parent_code"].ToString()].名稱 : "",
+                    規格 = productInfo.ContainsKey(r["parent_code"].ToString()) ? productInfo[r["parent_code"].ToString()].規格 : "",
+                    備註 = productInfo.ContainsKey(r["parent_code"].ToString()) ? productInfo[r["parent_code"].ToString()].備註 : "",
+                }).ToList();
+
+            // 組產品物件
+            var row = dtProd.DataTableToRowList()[0];
+            var product = row.SQLToClass<productsClass, enum_products>();
+
+            return product;
+        }
+        /// <summary>
+        /// 取得所有產品清單（靜態函式）
+        /// </summary>
+        /// <remarks>
+        /// **用途：**  
+        /// 從資料庫 <c>products</c> 資料表中一次性讀取所有產品資料，  
+        /// 並轉換為 <c>productsClass</c> 物件清單回傳。  
+        ///
+        /// **邏輯流程：**  
+        /// 1. 驗證 <paramref name="conf"/> 是否為 null，若為 null 則拋出例外。  
+        /// 2. 依據 <c>enum_products</c> 取得資料表名稱。  
+        /// 3. 建立 <c>SQLControl</c> 物件並連線至指定資料庫。  
+        /// 4. 呼叫 <c>GetAllRows</c> 讀取全表資料。  
+        /// 5. 使用 <c>SQLToClass</c> 轉換為 <c>productsClass</c> 清單。  
+        ///
+        /// **注意事項：**  
+        /// - 此方法會回傳所有產品資料，不支援過濾條件。  
+        /// - 若資料表為空，則回傳空清單。  
+        /// - 若 <paramref name="conf"/> 為 null，會拋出 <c>ArgumentNullException</c>。  
+        /// </remarks>
+        /// <param name="conf">
+        /// 資料庫設定物件 <c>sys_serverSettingClass</c>，必須包含 Server、DBName、User、Password、Port 等資訊。
+        /// </param>
+        /// <returns>
+        /// 一個 <c>List&lt;productsClass&gt;</c>，其中每個元素代表一筆產品資料。  
+        /// 若查無資料則回傳空清單。
+        /// </returns>
+        public static List<productsClass> GetAllProducts(sys_serverSettingClass conf)
+        {
+            if (conf == null) throw new ArgumentNullException(nameof(conf), "DB 設定不可為 null");
+
+            string productsTable = new enum_products().GetEnumDescription();
+
+            var sqlProducts = new SQLControl(conf.Server, conf.DBName, productsTable,
+                conf.User, conf.Password, conf.Port.StringToUInt32(), SSLMode);
+
+            var list = sqlProducts.GetAllRows(null);
+            return list.SQLToClass<productsClass , enum_products>();
+        }
 
 
 

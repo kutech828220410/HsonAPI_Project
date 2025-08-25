@@ -828,7 +828,7 @@ namespace HsonWebAPI
         ///     "TimeTaken": "00:00:00.012",
         ///     "Data": {
         ///         "product_code": "P001",
-        ///         "cover_url": "https://example.com/uploads/products/P001/P001_cover.jpg"
+        ///         "img_url": "https://example.com/uploads/products/P001/P001_cover.jpg"
         ///     }
         /// }
         /// </code>
@@ -979,11 +979,11 @@ namespace HsonWebAPI
         ///     "Data": [
         ///         {
         ///             "product_code": "P001",
-        ///             "cover_url": "https://example.com/uploads/products/P001/P001_cover.jpg"
+        ///             "img_url": "https://example.com/uploads/products/P001/P001_cover.jpg"
         ///         },
         ///         {
         ///             "product_code": "P002",
-        ///             "cover_url": "https://example.com/uploads/products/P002/P002_cover.jpg"
+        ///             "img_url": "https://example.com/uploads/products/P002/P002_cover.jpg"
         ///         }
         ///     ]
         /// }
